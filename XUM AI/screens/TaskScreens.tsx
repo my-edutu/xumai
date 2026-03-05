@@ -1,14 +1,16 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScreenName, Task, LinguasenseTask } from '../types';
 import { Header } from '../components/Shared';
+import { supabase } from '../supabaseClient';
+
+type LinguasenseEngine = 'grounding' | 'synthesis' | 'audit';
 
 interface ScreenProps {
-  onNavigate: (screen: ScreenName) => void;
+  onNavigate: (screen: ScreenName, engineType?: LinguasenseEngine) => void;
   onCompleteTask?: (reward: number, xp: number) => void;
+  engineType?: LinguasenseEngine;
 }
-
-import { supabase } from '../supabaseClient';
 
 // Enhanced Service with Supabase Integration
 const TaskService = {
@@ -306,7 +308,8 @@ export const CaptureChoiceScreen: React.FC<ScreenProps> = ({ onNavigate }) => {
     { id: 'aud', title: 'Record Voice', desc: 'Audio linguistic grounding.', icon: 'mic', color: 'bg-blue-600', screen: ScreenName.CAPTURE_AUDIO },
     { id: 'img', title: 'Capture Image', desc: 'Visual environment mapping.', icon: 'photo_camera', color: 'bg-emerald-500', screen: ScreenName.MEDIA_CAPTURE },
     { id: 'vid', title: 'Record Video', desc: 'Temporal scene analysis.', icon: 'videocam', color: 'bg-rose-500', screen: ScreenName.CAPTURE_VIDEO },
-    { id: 'txt', title: 'Write/Type Text', desc: 'Semantic text datasets.', icon: 'description', color: 'bg-orange-500', screen: ScreenName.TEXT_INPUT_TASK }
+    { id: 'txt', title: 'Write/Type Text', desc: 'Semantic text datasets.', icon: 'description', color: 'bg-orange-500', screen: ScreenName.TEXT_INPUT_TASK },
+    { id: 'val', title: 'Validate Data', desc: 'Cross-verify node accuracy.', icon: 'fact_check', color: 'bg-indigo-500', screen: ScreenName.VALIDATION_TASK }
   ];
 
   return (
@@ -375,8 +378,18 @@ export const CaptureVideoScreen: React.FC<ScreenProps> = ({ onNavigate, onComple
         <h2 className="text-white text-[11px] font-bold uppercase tracking-widest">Video Lab</h2>
       </div>
 
-      <div className="flex-1 flex items-center justify-center">
-        <div className={`w-[90%] aspect-[9/16] rounded-[3rem] bg-slate-900 border-2 border-white/10 relative overflow-hidden flex items-center justify-center ${isRecording ? 'ring-4 ring-red-500 ring-offset-4 ring-offset-black' : ''}`}>
+      <div className="flex-1 flex flex-col items-center justify-center p-6">
+        <div className={`w-full max-w-sm aspect-[9/16] rounded-[3rem] bg-slate-900 border-2 border-white/10 relative overflow-hidden flex flex-col items-center justify-center transition-all ${isRecording ? 'ring-4 ring-red-500 ring-offset-4 ring-offset-black' : ''}`}>
+          {!isRecording && status === 'idle' && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-black/60 backdrop-blur-sm z-10 text-center">
+              <span className="material-symbols-outlined text-5xl text-white mb-4">video_library</span>
+              <h3 className="text-white font-bold uppercase tracking-widest text-sm mb-2">Temporal Sensing</h3>
+              <p className="text-slate-400 text-xs mb-6">You can record a live stream or upload an existing capture from your neural archive.</p>
+              <button className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full text-[10px] font-bold uppercase tracking-[0.2em] border border-white/10 transition-all flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">upload</span> Upload from device
+              </button>
+            </div>
+          )}
           <span className="material-symbols-outlined text-[100px] text-white/5">{isRecording ? 'videocam' : 'videocam_off'}</span>
           {isRecording && (
             <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md">
@@ -428,6 +441,16 @@ export const MediaCaptureScreen: React.FC<ScreenProps> = ({ onNavigate, onComple
 
       <div className="flex-1 p-4 flex flex-col items-center justify-center relative">
         <div className="w-full aspect-[4/5] rounded-[3rem] bg-slate-900 border-2 border-white/10 relative overflow-hidden flex items-center justify-center">
+          {status === 'idle' && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-black/60 backdrop-blur-sm z-10 text-center">
+              <span className="material-symbols-outlined text-5xl text-white mb-4">add_a_photo</span>
+              <h3 className="text-white font-bold uppercase tracking-widest text-sm mb-2">Visual Mapping</h3>
+              <p className="text-slate-400 text-xs mb-6">Snap a fresh capture or select an image from your device storage.</p>
+              <button className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full text-[10px] font-bold uppercase tracking-[0.2em] border border-white/10 transition-all flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">image</span> Select from Gallery
+              </button>
+            </div>
+          )}
           <span className="material-symbols-outlined text-[100px] text-white/5">photo_camera</span>
           {isCapturing && (
             <div className="absolute inset-0 bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -441,7 +464,7 @@ export const MediaCaptureScreen: React.FC<ScreenProps> = ({ onNavigate, onComple
           <input
             value={label}
             onChange={e => setLabel(e.target.value)}
-            placeholder="What are you capturing?"
+            placeholder="Assign semantic tag..."
             className="w-full h-14 bg-transparent border-b border-white/20 text-white font-bold text-lg outline-none focus:border-primary transition-all"
           />
         </div>
@@ -591,7 +614,7 @@ export const HybridCaptureScreen: React.FC<ScreenProps> = ({ onNavigate, onCompl
   );
 };
 
-export const LanguageTaskRunnerScreen: React.FC<ScreenProps> = ({ onNavigate, onCompleteTask }) => {
+export const LanguageTaskRunnerScreen: React.FC<ScreenProps> = ({ onNavigate, onCompleteTask, engineType = 'grounding' }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [textValue, setTextValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -600,11 +623,37 @@ export const LanguageTaskRunnerScreen: React.FC<ScreenProps> = ({ onNavigate, on
   const [consensusScore, setConsensusScore] = useState(0);
   const [audioBars, setAudioBars] = useState<number[]>(new Array(12).fill(10));
 
-  const linguasenseTasks: LinguasenseTask[] = [
-    { id: 'ls_1', prompt: 'What is the local slang for "Fake/Imitation" in Lagos?', context: 'Street commerce and fashion.', type: 'both', reward: 0.75, xp: 30, targetLanguage: 'Yoruba-Pidgin' },
-    { id: 'ls_2', prompt: 'Record the correct pronunciation of "Owanbe".', context: 'Party context.', type: 'voice', reward: 1.20, xp: 50, targetLanguage: 'Yoruba' },
-    { id: 'ls_3', prompt: 'Explain the nuance of "God when?" used in social media.', context: 'Relationship and lifestyle.', type: 'text', reward: 0.50, xp: 20, targetLanguage: 'En-NG' },
-  ];
+  const [selectedEngine, setSelectedEngine] = useState<LinguasenseEngine>(engineType);
+
+  // Sync if the engineType prop changes (e.g., navigating from different engine cards)
+  useEffect(() => { setSelectedEngine(engineType); }, [engineType]);
+
+  const engineConfigs: Record<LinguasenseEngine, { title: string; tasks: LinguasenseTask[] }> = {
+    grounding: {
+      title: 'Grounding Engine',
+      tasks: [
+        { id: '550e8400-e29b-41d4-a716-446655440000', prompt: 'What is the local slang for "Fake/Imitation" in Lagos?', context: 'Street commerce and fashion.', type: 'both', reward: 0.75, xp: 30, targetLanguage: 'Yoruba-Pidgin' },
+        { id: '550e8400-e29b-41d4-a716-446655440001', prompt: 'Record the correct pronunciation of "Owanbe".', context: 'Party context.', type: 'voice', reward: 1.20, xp: 50, targetLanguage: 'Yoruba' },
+      ]
+    },
+    synthesis: {
+      title: 'Synthesis Lab',
+      tasks: [
+        { id: '550e8400-e29b-41d4-a716-446655440003', prompt: 'Critique this AI-generated joke for cultural relevance.', context: 'Social satire.', type: 'text', reward: 1.50, xp: 40, targetLanguage: 'Igbo-English' },
+        { id: '550e8400-e29b-41d4-a716-446655440004', prompt: 'Perform a roleplay of a traditional market negotiation.', context: 'Economic culture.', type: 'voice', reward: 2.00, xp: 60, targetLanguage: 'Hausa' },
+      ]
+    },
+    audit: {
+      title: 'Audit Layer',
+      tasks: [
+        { id: '550e8400-e29b-41d4-a716-446655440005', prompt: 'Identify factual hallucinations in this localized news brief.', context: 'News verification.', type: 'text', reward: 1.80, xp: 45, targetLanguage: 'En-NG' },
+        { id: '550e8400-e29b-41d4-a716-446655440006', prompt: 'Verify the safety and toxicity of this dialect-heavy dialogue.', context: 'Moderation.', type: 'both', reward: 2.50, xp: 70, targetLanguage: 'Pidgin' },
+      ]
+    }
+  };
+
+  const currentConfig = engineConfigs[selectedEngine];
+  const linguasenseTasks = currentConfig.tasks;
 
   const currentTask = linguasenseTasks[currentIndex];
 
@@ -689,7 +738,7 @@ export const LanguageTaskRunnerScreen: React.FC<ScreenProps> = ({ onNavigate, on
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors duration-500">
       <Header
-        title={`Grounding Engine`}
+        title={currentConfig.title}
         onBack={() => onNavigate(ScreenName.LINGUASENSE)}
       />
 
@@ -769,7 +818,7 @@ export const LanguageTaskRunnerScreen: React.FC<ScreenProps> = ({ onNavigate, on
             onClick={handleSubmit}
             className="w-full h-18 bg-primary text-white rounded-[2rem] text-sm font-bold uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(19,73,236,0.2)] active:scale-95 disabled:opacity-30 transition-all flex items-center justify-center gap-3"
           >
-            {currentIndex === linguasenseTasks.length - 1 ? 'Finalize Synthesis' : 'Next Grounding'}
+            {currentIndex === linguasenseTasks.length - 1 ? 'Finalize Synthesis' : `Next ${selectedEngine.charAt(0).toUpperCase() + selectedEngine.slice(1)}`}
             <span className="material-symbols-outlined text-white">neurology</span>
           </button>
         </div>
@@ -870,10 +919,10 @@ export const LinguasenseScreen: React.FC<ScreenProps> = ({ onNavigate }) => {
     { label: 'Human Network', value: '2.4M' }
   ];
 
-  const categories = [
-    { id: 'l1', title: 'Grounding (H2D)', desc: 'Convert human dialects into machine intelligence.', icon: 'neurology', color: 'from-blue-600 to-indigo-800', count: 42 },
-    { id: 'l2', title: 'Synthesis (D2H)', desc: 'Test AI comprehension of complex cultural cues.', icon: 'auto_awesome', color: 'from-purple-600 to-pink-700', count: 18 },
-    { id: 'l3', title: 'Audit Layer', desc: 'Identify and correct hallucinations in LLM outputs.', icon: 'security', color: 'from-emerald-600 to-teal-800', count: 31 }
+  const categories: { id: string; engine: 'grounding' | 'synthesis' | 'audit'; title: string; desc: string; icon: string; color: string; count: number }[] = [
+    { id: 'l1', engine: 'grounding', title: 'Grounding (H2D)', desc: 'Convert human dialects into machine intelligence.', icon: 'neurology', color: 'from-blue-600 to-indigo-800', count: 42 },
+    { id: 'l2', engine: 'synthesis', title: 'Synthesis (D2H)', desc: 'Test AI comprehension of complex cultural cues.', icon: 'auto_awesome', color: 'from-purple-600 to-pink-700', count: 18 },
+    { id: 'l3', engine: 'audit', title: 'Audit Layer', desc: 'Identify and correct hallucinations in LLM outputs.', icon: 'security', color: 'from-emerald-600 to-teal-800', count: 31 }
   ];
 
   return (
@@ -917,7 +966,7 @@ export const LinguasenseScreen: React.FC<ScreenProps> = ({ onNavigate }) => {
           {categories.map((cat) => (
             <div
               key={cat.id}
-              onClick={() => onNavigate(ScreenName.LANGUAGE_RUNNER)}
+              onClick={() => onNavigate(ScreenName.LANGUAGE_RUNNER, cat.engine)}
               className="group relative p-6 rounded-[2rem] bg-slate-900/50 border border-white/5 hover:border-primary/30 transition-all active:scale-[0.98] cursor-pointer overflow-hidden"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-10 transition-opacity`}></div>
@@ -951,7 +1000,96 @@ export const LinguasenseScreen: React.FC<ScreenProps> = ({ onNavigate }) => {
 
 // Keeping placeholders for others
 export const CreateTaskScreen: React.FC<ScreenProps> = ({ onNavigate }) => <div className="min-h-screen bg-background-light dark:bg-background-dark"><Header title="Create" onBack={() => onNavigate(ScreenName.HOME)} /></div>;
-export const ValidationTaskScreen: React.FC<ScreenProps> = ({ onNavigate }) => <div className="min-h-screen bg-background-light dark:bg-background-dark"><Header title="Validation" onBack={() => onNavigate(ScreenName.HOME)} /></div>;
+export const ValidationTaskScreen: React.FC<ScreenProps> = ({ onNavigate, onCompleteTask }) => {
+  const [correction, setCorrection] = useState('');
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<'idle' | 'submitting'>('idle');
+
+  const handleSubmit = async () => {
+    if (isCorrect === null) return;
+    setStatus('submitting');
+
+    // Simulate complex validation logic (3 min threshold)
+    await new Promise(r => setTimeout(r, 1500));
+
+    await TaskService.submitPayload('val-task-001', {
+      is_accurate: isCorrect,
+      correction: isCorrect ? '' : correction,
+      validation_count: 1 // In a real app, this would be updated in the DB
+    }, 0.30, 15);
+
+    onCompleteTask?.(0.30, 15);
+    onNavigate(ScreenName.TASK_SUCCESS);
+  };
+
+  return (
+    <div className="min-h-screen bg-background-light dark:bg-background-dark pb-24 transition-colors duration-500">
+      <Header title="Neural Validation" onBack={() => onNavigate(ScreenName.CAPTURE_CHOICE)} />
+      <div className="p-6">
+        <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-primary text-sm">info</span>
+            <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Protocol Instruction</span>
+          </div>
+          <p className="text-slate-900 dark:text-white font-medium leading-relaxed">
+            Verify the accuracy of the following contribution. This requires at least <span className="text-primary font-bold">3 independent node validations</span> before acceptance.
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-xl mb-8">
+          <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Original Contribution</h3>
+          <div className="aspect-video bg-slate-100 dark:bg-black/20 rounded-2xl flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-5xl text-slate-300">image</span>
+          </div>
+          <p className="text-xl font-bold text-slate-900 dark:text-white mb-2 uppercase">"Traffic Light: Red"</p>
+          <p className="text-sm text-slate-500">Label: <span className="text-primary font-bold">Urban Safety</span></p>
+        </div>
+
+        <div className="space-y-6">
+          <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Accuracy Verdict</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setIsCorrect(true)}
+              className={`h-20 rounded-3xl border-2 flex flex-col items-center justify-center transition-all ${isCorrect === true ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg' : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-400'}`}
+            >
+              <span className="material-symbols-outlined mb-1">check_circle</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">Accurate</span>
+            </button>
+            <button
+              onClick={() => setIsCorrect(false)}
+              className={`h-20 rounded-3xl border-2 flex flex-col items-center justify-center transition-all ${isCorrect === false ? 'bg-red-500 border-red-500 text-white shadow-lg' : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-400'}`}
+            >
+              <span className="material-symbols-outlined mb-1">cancel</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">Incorrect</span>
+            </button>
+          </div>
+
+          {isCorrect === false && (
+            <div className="animate-fade-in space-y-4">
+              <label className="text-[10px] font-bold text-primary uppercase tracking-widest block ml-2">Correct Submission & Notes</label>
+              <textarea
+                value={correction}
+                onChange={e => setCorrection(e.target.value)}
+                placeholder="What should this be? Provide reasoning..."
+                className="w-full h-32 rounded-[2rem] bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 p-6 text-sm outline-none focus:ring-4 focus:ring-primary/10 transition-all resize-none dark:text-white"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="mt-12">
+          <button
+            disabled={isCorrect === null || (isCorrect === false && !correction) || status === 'submitting'}
+            onClick={handleSubmit}
+            className="w-full h-18 bg-primary text-white rounded-[2rem] text-sm font-bold uppercase tracking-[0.2em] shadow-xl active:scale-95 disabled:opacity-20 transition-all flex items-center justify-center gap-3"
+          >
+            {status === 'submitting' ? 'Verifying Node...' : 'Submit Verification'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 export const TaskSubmissionScreen: React.FC<ScreenProps> = ({ onNavigate }) => <div className="min-h-screen bg-background-light dark:bg-background-dark"><Header title="Review" onBack={() => onNavigate(ScreenName.HOME)} /></div>;
 export const XUMJudgeTaskScreen: React.FC<ScreenProps> = ({ onNavigate }) => <div className="min-h-screen bg-background-light dark:bg-background-dark"><Header title="Judge" onBack={() => onNavigate(ScreenName.HOME)} /></div>;
 export const RLHFCorrectionTaskScreen: React.FC<ScreenProps> = ({ onNavigate }) => <div className="min-h-screen bg-background-light dark:bg-background-dark"><Header title="Correction" onBack={() => onNavigate(ScreenName.HOME)} /></div>;

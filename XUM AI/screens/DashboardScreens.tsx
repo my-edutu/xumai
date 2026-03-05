@@ -50,10 +50,6 @@ interface ScreenProps {
 
 export const HomeScreen: React.FC<ScreenProps> = (props) => {
   const { onNavigate, balance, profile } = props;
-  const judgeTasks = [
-    { title: 'General Knowledge RLHF', reward: '250 XP', pay: '$1.20', icon: 'gavel', color: 'primary', screen: ScreenName.XUM_JUDGE },
-    { title: 'Cultural Correction', reward: '400 XP', pay: '$2.50', icon: 'auto_fix_high', color: 'purple', screen: ScreenName.RLHF_CORRECTION, elite: true }
-  ];
 
   const quickTasks = [
     { id: '1', title: 'Street Sign Labeling', type: 'image', reward: '$0.50', xp: '25', time: '2m', icon: 'image' },
@@ -116,24 +112,17 @@ export const HomeScreen: React.FC<ScreenProps> = (props) => {
           <section className="animate-fade-in mb-12 md:mb-0">
             <div className="px-5 md:px-0 flex items-center justify-between mb-6">
               <h3 className="text-lg md:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">XUM Judge</h3>
-              <button onClick={() => onNavigate(ScreenName.TASK_MARKETPLACE)} className="text-[11px] md:text-sm font-bold text-primary uppercase tracking-widest hover:underline">View more</button>
             </div>
-            <div className="flex flex-col gap-4 px-5 md:px-0">
-              {judgeTasks.map((task, i) => (
-                <div key={i} onClick={() => onNavigate(task.screen)} className="group relative flex items-center p-5 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all cursor-pointer shadow-sm active:scale-[0.99]">
-                  <div className={`size-14 md:size-20 rounded-2xl md:rounded-[1.5rem] bg-primary/10 flex items-center justify-center text-primary mr-5 md:mr-8 group-hover:scale-110 transition-transform`}>
-                    <span className="material-symbols-outlined text-2xl md:text-4xl">{task.icon}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-sm md:text-xl text-slate-900 dark:text-white uppercase truncate">{task.title}</h4>
-                    <p className="text-[14px] md:text-lg text-slate-500 dark:text-slate-400 mt-1">Linguistic Feedback Node</p>
-                  </div>
-                  <div className="text-right shrink-0 ml-4">
-                    <p className="text-primary font-black text-lg md:text-2xl">{task.pay}</p>
-                    <p className="text-[11px] md:text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">+{task.reward}</p>
-                  </div>
+            <div className="px-5 md:px-0">
+              <div className="relative flex flex-col items-center justify-center gap-4 p-8 rounded-[2rem] bg-white dark:bg-surface-dark border-2 border-dashed border-slate-200 dark:border-slate-700 text-center overflow-hidden">
+                <div className="size-16 rounded-[1.5rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-3xl text-slate-400">lock</span>
                 </div>
-              ))}
+                <div>
+                  <h4 className="font-black text-slate-900 dark:text-white text-base uppercase tracking-tight">Locked</h4>
+                  <p className="text-slate-400 text-sm font-medium mt-1">Complete more tasks to unlock XUM Judge.</p>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -282,6 +271,24 @@ export const ProfileScreen: React.FC<ScreenProps> = ({ onNavigate, balance, prof
         </div>
       </div>
       <div className="px-5 space-y-8 pb-32 md:max-w-4xl md:mx-auto">
+        {/* Monetization Progress */}
+        <section className="bg-gradient-to-br from-indigo-600 to-primary p-6 md:p-10 rounded-[2.5rem] md:rounded-[4rem] text-white shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-6 opacity-20">
+            <span className="material-symbols-outlined text-7xl md:text-9xl">monetization_on</span>
+          </div>
+          <div className="relative z-10">
+            <h3 className="text-[10px] md:text-sm font-bold uppercase tracking-[0.3em] mb-2 opacity-80">Growth Phase</h3>
+            <h2 className="text-xl md:text-4xl font-black uppercase tracking-tight mb-4">Unlock Lab <br />Monetization</h2>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
+                <div className="h-full bg-white shadow-[0_0_10px_white]" style={{ width: '24%' }}></div>
+              </div>
+              <span className="text-xs font-bold font-mono">12/50</span>
+            </div>
+            <p className="text-[11px] md:text-lg font-medium opacity-90">Achieve 50 followers to activate currency conversion for your neural contributions.</p>
+          </div>
+        </section>
+
         <div className="grid grid-cols-2 gap-4 md:gap-8">
           <div className="bg-surface-light dark:bg-surface-dark p-8 md:p-14 rounded-[2.5rem] md:rounded-[4rem] border border-slate-100 dark:border-slate-800/50 shadow-xl flex flex-col items-center justify-center text-center">
             <p className="text-[11px] md:text-lg font-bold text-slate-400 uppercase tracking-widest mb-2">Earnings</p>
@@ -532,4 +539,42 @@ export const SupportScreen: React.FC<ScreenProps> = ({ onNavigate }) => {
   );
 };
 
-export const ReferralScreen: React.FC<ScreenProps> = ({ onNavigate }) => <div className="min-h-screen bg-background-light dark:bg-background-dark"><Header title="Referrals" onBack={() => onNavigate(ScreenName.HOME)} /></div>;
+export const ReferralScreen: React.FC<ScreenProps> = ({ onNavigate }) => {
+  return (
+    <div className="min-h-screen bg-background-light dark:bg-background-dark animate-fade-in transition-colors duration-500">
+      <Header title="Network Growth" onBack={() => onNavigate(ScreenName.HOME)} />
+      <div className="p-6 md:p-16 md:max-w-4xl md:mx-auto space-y-12">
+        <div className="text-center">
+          <div className="size-24 md:size-40 rounded-[2.5rem] bg-primary/10 flex items-center justify-center text-primary mx-auto mb-8">
+            <span className="material-symbols-outlined text-4xl md:text-7xl">group_add</span>
+          </div>
+          <h1 className="text-3xl md:text-6xl font-black uppercase tracking-tighter leading-none mb-4">Expand the <br />Network</h1>
+          <p className="text-slate-500 font-bold uppercase tracking-widest text-[11px] md:text-lg">Refer active contributors and earn cents for every verified task they complete.</p>
+        </div>
+
+        <div className="bg-surface-light dark:bg-surface-dark p-8 md:p-14 rounded-[2.5rem] md:rounded-[4rem] border border-slate-100 dark:border-slate-800 shadow-xl text-center">
+          <p className="text-slate-400 text-[10px] md:text-base font-bold uppercase tracking-widest mb-4">Your Unique Node Identifier</p>
+          <div className="flex items-center gap-4 bg-white dark:bg-black/20 p-4 md:p-8 rounded-2xl md:rounded-[2rem] border border-slate-100 dark:border-white/5">
+            <code className="flex-1 text-lg md:text-4xl font-mono font-bold text-primary tracking-tighter">XUM-REF-9102-JK</code>
+            <button className="size-12 md:size-20 bg-primary text-white rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-all">
+              <span className="material-symbols-outlined md:text-3xl">content_copy</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 md:gap-8 pb-12">
+          <div className="p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] bg-emerald-500/10 border border-emerald-500/20 text-center">
+            <p className="text-[10px] md:text-base font-bold text-emerald-600 uppercase tracking-widest mb-1">Referral Yield</p>
+            <p className="text-2xl md:text-5xl font-black text-emerald-500">+$0.12</p>
+            <p className="text-[9px] md:text-sm text-emerald-600/60 font-medium uppercase mt-2">Verified today</p>
+          </div>
+          <div className="p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] bg-primary/10 border border-primary/20 text-center">
+            <p className="text-[10px] md:text-base font-bold text-primary uppercase tracking-widest mb-1">Total Nodes</p>
+            <p className="text-2xl md:text-5xl font-black text-primary">14</p>
+            <p className="text-[9px] md:text-sm text-primary/60 font-medium uppercase mt-2">In your network</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

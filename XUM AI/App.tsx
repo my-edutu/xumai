@@ -95,14 +95,14 @@ const THEMES = [
 function AppContent() {
   const { user, profile, refreshProfile } = useUser();
   const [currentScreen, setCurrentScreen] = useState<ScreenName>(ScreenName.SPLASH);
+  const [selectedEngine, setSelectedEngine] = useState<'grounding' | 'synthesis' | 'audit'>('grounding');
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [activeThemeId, setActiveThemeId] = useState('midnight');
 
   const [history, setHistory] = useState([
     { title: "Task Reward: Image Labeling", date: "Today, 10:42 AM", amount: "+$2.50", type: "earn", icon: "image_search", color: "blue" },
     { title: "Withdrawal to PayPal", date: "Yesterday", amount: "-$100.00", type: "withdraw", icon: "arrow_outward", color: "red" },
-    { title: "Quality Bonus", date: "Nov 12", amount: "+$5.00", type: "earn", icon: "award_star", color: "purple" },
-    { title: "Task Reward: Translation", date: "Nov 10", amount: "+$12.00", type: "earn", icon: "translate", color: "blue" }
+    { title: "Quality Bonus", date: "Nov 12", amount: "+$5.00", type: "earn", icon: "award_star", color: "purple" }
   ]);
 
   // Sync navigation with auth state
@@ -158,8 +158,9 @@ function AppContent() {
     }
   }, [activeThemeId, isDarkMode]);
 
-  const navigate = (screen: ScreenName) => {
+  const navigate = (screen: ScreenName, engineType?: 'grounding' | 'synthesis' | 'audit') => {
     window.scrollTo(0, 0);
+    if (engineType) setSelectedEngine(engineType);
     setCurrentScreen(screen);
   };
 
@@ -254,7 +255,7 @@ function AppContent() {
       case ScreenName.LINGUASENSE:
         return <LinguasenseScreen onNavigate={navigate} />;
       case ScreenName.LANGUAGE_RUNNER:
-        return <LanguageTaskRunnerScreen onNavigate={navigate} onCompleteTask={handleCompleteTask} />;
+        return <LanguageTaskRunnerScreen onNavigate={navigate} onCompleteTask={handleCompleteTask} engineType={selectedEngine} />;
       case ScreenName.TEXT_INPUT_TASK:
         return <TextInputTaskScreen onNavigate={navigate} onCompleteTask={handleCompleteTask} />;
       case ScreenName.VALIDATION_TASK:
