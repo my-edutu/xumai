@@ -1352,7 +1352,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
         paddingHorizontal: 20, paddingTop: Platform.OS === 'android' ? 24 : 12, paddingBottom: 16, borderBottomWidth: 1,
     },
-    headerLogo: { fontSize: 22, fontWeight: '900', letterSpacing: 3 },
+    headerLogo: { fontSize: 22, fontWeight: '700', letterSpacing: 3 },
     headerSub: { fontSize: 9, fontWeight: '800', letterSpacing: 3, textTransform: 'uppercase', marginTop: 2 },
     headerAvatar: {
         width: 40, height: 40, borderRadius: 14, backgroundColor: '#f97316',
