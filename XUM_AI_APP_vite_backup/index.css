@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    /* XUM DESIGN SYSTEM TOKENS v2.0 */
+    --xum-primary: #f97316;
+    --xum-primary-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    --xum-secondary: #3b82f6;
+    --xum-bg: #020617;
+    --xum-surface: #0f172a;
+    --xum-border: rgba(255, 255, 255, 0.08);
+    --xum-text: #e2e8f0;
+    --xum-text-dim: #94a3b8;
+
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 8px;
+}
+
+body {
+    background-color: var(--xum-bg);
+    color: var(--xum-text);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+.outfit {
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.02em;
+}
+
+.glass {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--xum-border);
+    border-radius: var(--radius-lg);
+}
+
+.text-gradient {
+    background: var(--xum-primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Custom animations */
+@keyframes slideUp {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes progress {
+    0% {
+        width: 0;
+    }
+
+    100% {
+        width: 100%;
+    }
+}
+
+.animate-progress {
+    animation: progress 2s ease-in-out forwards;
+}
+
+/* Safe area padding for mobile */
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* Hide scrollbar but keep scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

@@ -5,11 +5,19 @@
     "description": "Unified management for XUM AI Multi-App Ecosystem",
     "scripts": {
         "dev": "npm run dev:all",
+        "mobile:dev": "npm --prefix xum_ai_app run dev",
+        "mobile:start": "npm --prefix xum_ai_app run start",
+        "mobile:prebuild:android": "npm --prefix xum_ai_app run prebuild:android",
+        "mobile:android": "npm --prefix xum_ai_app run android",
+        "mobile:build:apk": "npm --prefix xum_ai_app run build:apk",
         "dev:xum": "npm run dev --prefix \"XUM AI\"",
         "dev:company": "npm run dev --prefix company",
         "dev:admin": "npm run dev --prefix \"Admin Panel\"",
         "dev:all": "npx concurrently -n \"XUM,CORP,ADMIN\" -c \"blue,green,magenta\" \"npm run dev:xum\" \"npm run dev:company\" \"npm run dev:admin\"",
         "install:all": "npm install && npm install --prefix \"XUM AI\" && npm install --prefix company && npm install --prefix \"Admin Panel\""
+    },
+    "engines": {
+        "node": ">=20.19.4"
     },
     "devDependencies": {
         "concurrently": "^8.2.2"

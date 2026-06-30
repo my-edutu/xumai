@@ -1,0 +1,29 @@
+# EAS Build Ignore File
+# This file specifies patterns for files/folders to exclude from EAS Build uploads
+
+# Dependencies - EAS installs these fresh
+node_modules/
+
+# Local environment files (use EAS Secrets instead)
+.env.local
+.env.*.local
+local.env
+
+# Build artifacts
+dist/
+web-build/
+.expo/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Documentation (not needed for build)
+docs/
+*.md
+!README.md
+
+# Agent workflows (not needed for build)
+.agent/
+agent/

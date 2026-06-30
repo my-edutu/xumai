@@ -1,0 +1,121 @@
+{
+  "name": "xum-ai",
+  "slug": "xumai",
+  "version": "1.0.0",
+  "orientation": "portrait",
+  "icon": "./assets/icon.png",
+  "userInterfaceStyle": "dark",
+  "newArchEnabled": true,
+  "scheme": "xum",
+  "splash": {
+    "image": "./assets/logo.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#0a0d1d"
+  },
+  "ios": {
+    "supportsTablet": true,
+    "bundleIdentifier": "com.xumai.app",
+    "buildNumber": "1",
+    "infoPlist": {
+      "NSCameraUsageDescription": "XUM AI needs camera access to capture visual data for AI training.",
+      "NSMicrophoneUsageDescription": "XUM AI needs microphone access to record audio for linguistic grounding.",
+      "NSPhotoLibraryUsageDescription": "XUM AI needs photo library access to read photos for AI processing.",
+      "NSPhotoLibraryAddUsageDescription": "XUM AI needs photo library access to save captured media.",
+      "UIBackgroundModes": [
+        "remote-notification"
+      ]
+    }
+  },
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/adaptive-icon.png",
+      "backgroundColor": "#0a0d1d"
+    },
+    "package": "com.xumai.app",
+    "edgeToEdgeEnabled": true,
+    "versionCode": 2,
+    "googleServicesFile": "./google-services.json",
+    "permissions": [
+      "android.permission.CAMERA",
+      "android.permission.RECORD_AUDIO",
+      "android.permission.MODIFY_AUDIO_SETTINGS"
+    ],
+    "blockedPermissions": [
+      "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+      "android.permission.READ_MEDIA_IMAGES",
+      "android.permission.READ_MEDIA_VIDEO",
+      "android.permission.READ_MEDIA_AUDIO",
+      "android.permission.READ_EXTERNAL_STORAGE",
+      "android.permission.WRITE_EXTERNAL_STORAGE",
+      "android.permission.FOREGROUND_SERVICE"
+    ]
+  },
+  "web": {
+    "favicon": "./assets/favicon.png",
+    "bundler": "metro",
+    "output": "single"
+  },
+  "plugins": [
+    [
+      "expo-camera",
+      {
+        "cameraPermission": "XUM AI needs camera access to capture visual data for AI training."
+      }
+    ],
+    [
+      "expo-av",
+      {
+        "microphonePermission": "XUM AI needs microphone access to record audio for linguistic grounding."
+      }
+    ],
+    "expo-web-browser",
+    "expo-font",
+    "expo-asset",
+    [
+      "expo-notifications",
+      {
+        "color": "#0a0d1d",
+        "defaultChannel": "default",
+        "sounds": [
+          "./assets/sounds/payment_chime.wav",
+          "./assets/sounds/task_alert.wav"
+        ],
+        "enableBackgroundRemoteNotifications": true
+      }
+    ],
+    "expo-video",
+    [
+      "expo-build-properties",
+      {
+        "android": {
+          "compileSdkVersion": 36,
+          "targetSdkVersion": 36,
+          "extraLines": [
+            "android.suppressUnsupportedCompileSdk=36"
+          ]
+        }
+      }
+    ],
+    [
+      "@sentry/react-native/expo",
+      {
+        "organization": "xum-ai",
+        "project": "react-native",
+        "url": "https://sentry.io/"
+      }
+    ]
+  ],
+  "runtimeVersion": "1.0.0",
+  "extra": {
+    "eas": {
+      "projectId": "7ebb9822-e2ef-4e1a-a576-47e2ce03cdb0"
+    },
+    "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_Y2hlZXJmdWwtc2xvdGgtMjAuY2xlcmsuYWNjb3VudHMuZGV2JA",
+    "EXPO_PUBLIC_SUPABASE_URL": "https://gkhemshbwmealgxczykk.supabase.co",
+    "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdraGVtc2hid21lYWxneGN6eWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NDYyNjksImV4cCI6MjA4MzQyMjI2OX0.lXmd_vACixjRtmb9TlgWpl1kbHW-_0qPdgbSLl3CjCA"
+  },
+  "updates": {
+    "url": "https://u.expo.dev/7ebb9822-e2ef-4e1a-a576-47e2ce03cdb0"
+  },
+  "owner": "xum-ai"
+}

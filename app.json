@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "c4435ee0-30b2-469a-b6a6-6a9fcee4d351"
+      }
+    },
+    "android": {
+      "package": "com.debra1c.xumaiecosystem"
+    }
+  }
+}
