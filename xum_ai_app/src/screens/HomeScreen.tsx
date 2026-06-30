@@ -167,7 +167,7 @@ export const HomeScreen = ({
                 {/* Header */}
                 <View style={styles.homeHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                        <Text style={[TEXT_STYLES.h4, { color: theme.text, fontWeight: '900', letterSpacing: 1, fontSize: 24 }]}>
+                        <Text style={[TEXT_STYLES.h4, { color: theme.text, fontWeight: '700', letterSpacing: 1, fontSize: 24 }]}>
                             XUM <Text style={{ color: theme.primary }}>AI</Text>
                         </Text>
                         {streakDays > 0 && (

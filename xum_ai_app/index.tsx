@@ -1,16 +1,26 @@
 import './global.css';
+import React from 'react';
 import { registerRootComponent } from 'expo';
 
 import * as WebBrowser from 'expo-web-browser';
 import App from './src/App';
+import { LinguaLinkLanding } from './src/pages/LinguaLinkLanding';
 
 // Complete auth session if we're returning from a redirect
 WebBrowser.maybeCompleteAuthSession();
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
+function Root() {
+  // On web, check if we're on the LinguaLink landing page
+  if (typeof window !== 'undefined' && window.location.pathname.replace(/\/+$/, '') === '/lingualink') {
+    return <LinguaLinkLanding />;
+  }
+  return <App />;
+}
+
+// registerRootComponent calls AppRegistry.registerComponent('main', () => Root);
 // It also ensures that whether you load the app in Expo Go or in a native build,
 // the environment is set up appropriately
-registerRootComponent(App);
+registerRootComponent(Root);
 
 /* 
   ⚠️ SERVER-SIDE DATABASE CODE (Reference Only) 
