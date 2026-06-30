@@ -48,3 +48,8 @@ credentials.json
 
 # Generated native folders - regenerate with expo prebuild
 /android/
+
+# Large binaries (downloadable via /lingualink route, not stored in git)
+public/*.apk
+public/*.aab
+public/*.ipa

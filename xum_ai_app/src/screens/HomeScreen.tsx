@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, ImageBackground, StyleSheet, Platform, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, ImageBackground, StyleSheet, Platform, ActivityIndicator, RefreshControl, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -385,6 +385,47 @@ export const HomeScreen = ({
                     </View>
                     <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.12)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 8 }}>
                         <Text style={{ color: '#10b981', fontWeight: '700', fontSize: 12 }}>+$0.08</Text>
+                    </View>
+                    <MaterialIcons name="chevron-right" size={20} color={theme.textSecondary} />
+                </TouchableOpacity>
+
+                {/* LinguaLink - Download our Language Learning App */}
+                <TouchableOpacity
+                    onPress={() => {
+                        if (Platform.OS === 'web') {
+                            window.location.href = '/lingualink';
+                        } else {
+                            Linking.openURL('https://xum.ai/lingualink');
+                        }
+                    }}
+                    activeOpacity={0.9}
+                    style={{
+                        backgroundColor: theme.surface,
+                        borderRadius: 16,
+                        padding: 16,
+                        marginBottom: SPACING.lg,
+                        borderWidth: 1,
+                        borderColor: 'rgba(6, 182, 212, 0.25)',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                    }}
+                >
+                    <View style={{
+                        width: 48, height: 48, borderRadius: 24,
+                        backgroundColor: 'rgba(6, 182, 212, 0.12)',
+                        justifyContent: 'center', alignItems: 'center',
+                        marginRight: 14,
+                    }}>
+                        <MaterialIcons name="language" size={24} color="#06b6d4" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={{ color: theme.text, fontWeight: '800', fontSize: 15 }}>LinguaLink</Text>
+                        <Text style={{ color: theme.textSecondary, fontSize: 12, marginTop: 2 }}>
+                            AI-powered language learning • Download Free
+                        </Text>
+                    </View>
+                    <View style={{ backgroundColor: 'rgba(6, 182, 212, 0.12)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 8 }}>
+                        <Text style={{ color: '#06b6d4', fontWeight: '700', fontSize: 12 }}>NEW</Text>
                     </View>
                     <MaterialIcons name="chevron-right" size={20} color={theme.textSecondary} />
                 </TouchableOpacity>
