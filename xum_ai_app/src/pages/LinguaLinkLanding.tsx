@@ -72,41 +72,31 @@ export function LinguaLinkLanding() {
         <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 via-gray-900/60 to-gray-900/40" />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-20 w-full">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-cyan-300 text-sm font-medium px-4 py-1.5 rounded-full mb-6 border border-white/10">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              Now Available for Android
-            </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight mb-6">
-              Learn Any Language
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-teal-300">
-                With AI Precision
-              </span>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight mb-6">
+              Empowering AI with the world's languages and cultures.
             </h1>
-            <p className="text-lg sm:text-xl text-gray-300 mb-8 max-w-xl leading-relaxed">
-              LinguaLink uses advanced AI to create personalized language lessons, 
-              real-time pronunciation feedback, and immersive conversation practice — 
-              all in the palm of your hand.
+            <p className="text-base sm:text-lg text-gray-300 mb-8 max-w-2xl leading-relaxed">
+              XUM AI powers LLMs and vision models with verified human data. LinguaLink lets you preserve and share your mother tongue. Download both and start shaping the future.
             </p>
             <div className="flex flex-wrap gap-4">
               <a
-                href={APK_URL}
-                download="LinguaLink.apk"
-                className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white px-8 py-4 rounded-xl text-lg font-bold shadow-2xl hover:shadow-cyan-500/30 hover:scale-105 transition-all duration-200 active:scale-95"
+                href="/"
+                className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm text-white border border-white/20 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/20 transition-all duration-200"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v12m0 0-4-4m4 4 4-4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
                 </svg>
-                Download Free APK
+                Download XUM AI
               </a>
-              <button
-                onClick={() => scrollTo('features')}
-                className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/20 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/20 transition-all duration-200"
+              <a
+                href="/lingualink"
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white px-8 py-4 rounded-xl text-lg font-bold shadow-2xl hover:shadow-cyan-500/30 hover:scale-105 transition-all duration-200 active:scale-95"
               >
-                Learn More
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v12m0 0-4-4m4 4 4-4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
                 </svg>
-              </button>
+                Download LinguaLink
+              </a>
             </div>
             <div className="flex items-center gap-6 mt-12 text-gray-400 text-sm">
               <div className="flex items-center gap-2">
