@@ -5,6 +5,9 @@
 
 import React, { useEffect, useState } from 'react';
 
+// Set via VITE_LINGUALINK_APK_URL env var, or defaults to local path (place .apk in public/)
+const APK_URL = import.meta.env.VITE_LINGUALINK_APK_URL || '{APK_URL}';
+
 // Free stock images (Unsplash)
 const HERO_IMG = 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=1200&q=80';
 const FEATURE_1_IMG = 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&q=80';
@@ -48,7 +51,7 @@ export function LinguaLinkLanding() {
             <button onClick={() => scrollTo('cta')} className="hover:text-cyan-600 transition-colors">Download</button>
           </div>
           <a
-            href="/lingualink.apk"
+            href={APK_URL}
             download="LinguaLink.apk"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 active:scale-95"
           >
@@ -86,7 +89,7 @@ export function LinguaLinkLanding() {
             </p>
             <div className="flex flex-wrap gap-4">
               <a
-                href="/lingualink.apk"
+                href={APK_URL}
                 download="LinguaLink.apk"
                 className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white px-8 py-4 rounded-xl text-lg font-bold shadow-2xl hover:shadow-cyan-500/30 hover:scale-105 transition-all duration-200 active:scale-95"
               >
@@ -274,7 +277,7 @@ export function LinguaLinkLanding() {
             Join thousands of learners worldwide. Download LinguaLink for free and start speaking a new language today.
           </p>
           <a
-            href="/lingualink.apk"
+            href={APK_URL}
             download="LinguaLink.apk"
             className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white px-10 py-4 rounded-xl text-xl font-bold shadow-2xl hover:shadow-cyan-500/30 hover:scale-105 transition-all duration-200 active:scale-95"
           >
@@ -299,7 +302,7 @@ export function LinguaLinkLanding() {
               <span className="text-gray-600 text-sm ml-2">by XUM AI</span>
             </div>
             <div className="flex items-center gap-6 text-sm">
-              <a href="/lingualink.apk" download="LinguaLink.apk" className="hover:text-white transition-colors">Download</a>
+              <a href={APK_URL} download="LinguaLink.apk" className="hover:text-white transition-colors">Download</a>
               <a href="#" className="hover:text-white transition-colors">Privacy</a>
               <a href="#" className="hover:text-white transition-colors">Terms</a>
               <a href="#" className="hover:text-white transition-colors">Support</a>
