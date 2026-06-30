@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, ImageBackground, StyleSheet, Platform, ActivityIndicator, RefreshControl, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, ImageBackground, StyleSheet, Platform, ActivityIndicator, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -167,7 +167,7 @@ export const HomeScreen = ({
                 {/* Header */}
                 <View style={styles.homeHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                        <Text style={[TEXT_STYLES.h4, { color: theme.text, fontWeight: '700', letterSpacing: 1, fontSize: 24 }]}>
+                        <Text style={[TEXT_STYLES.h4, { color: theme.text, fontWeight: '900', letterSpacing: 1, fontSize: 24 }]}>
                             XUM <Text style={{ color: theme.primary }}>AI</Text>
                         </Text>
                         {streakDays > 0 && (
@@ -221,95 +221,6 @@ export const HomeScreen = ({
                         </Text>
                     </Card>
                 </View>
-
-                {/* Hero: Download XUM + LinguaLink */}
-                <View style={{ marginBottom: SPACING.lg }}>
-                    <LinearGradient
-                        colors={['#0d9488', '#06b6d4']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={{ borderRadius: 16, padding: 20 }}
-                    >
-                        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800', marginBottom: 4 }}>
-                            Explore Our Apps
-                        </Text>
-                        <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, marginBottom: 16, lineHeight: 18 }}>
-                            Contribute to XUM AI or learn a new language with LinguaLink
-                        </Text>
-                        <View style={{ flexDirection: 'row', gap: 10 }}>
-                            <TouchableOpacity
-                                onPress={() => onNavigate(ScreenName.HOME)}
-                                activeOpacity={0.85}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: 'rgba(255,255,255,0.2)',
-                                    borderRadius: 12,
-                                    paddingVertical: 12,
-                                    alignItems: 'center',
-                                }}
-                            >
-                                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Download XUM</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    if (Platform.OS === 'web') {
-                                        window.location.href = '/lingualink';
-                                    } else {
-                                        Linking.openURL('https://xum.ai/lingualink');
-                                    }
-                                }}
-                                activeOpacity={0.85}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: '#fff',
-                                    borderRadius: 12,
-                                    paddingVertical: 12,
-                                    alignItems: 'center',
-                                }}
-                            >
-                                <Text style={{ color: '#0d9488', fontWeight: '700', fontSize: 13 }}>Download LinguaLink</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </LinearGradient>
-                </View>
-
-                {/* LinguaLink Get Started Banner */}
-                <TouchableOpacity
-                    onPress={() => {
-                        if (Platform.OS === 'web') {
-                            window.location.href = '/lingualink';
-                        } else {
-                            Linking.openURL('https://xum.ai/lingualink');
-                        }
-                    }}
-                    activeOpacity={0.9}
-                    style={{
-                        backgroundColor: theme.surface,
-                        borderRadius: 16,
-                        padding: 16,
-                        marginBottom: SPACING.lg,
-                        borderWidth: 1,
-                        borderColor: 'rgba(6, 182, 212, 0.2)',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                    }}
-                >
-                    <View style={{
-                        width: 48, height: 48, borderRadius: 24,
-                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        justifyContent: 'center', alignItems: 'center',
-                        marginRight: 14,
-                    }}>
-                        <MaterialIcons name="school" size={24} color="#06b6d4" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={{ color: theme.text, fontWeight: '800', fontSize: 15 }}>Get Started with LinguaLink</Text>
-                        <Text style={{ color: theme.textSecondary, fontSize: 12, marginTop: 2 }}>
-                            AI-powered language learning — free to download
-                        </Text>
-                    </View>
-                    <MaterialIcons name="chevron-right" size={20} color={theme.textSecondary} />
-                </TouchableOpacity>
 
                 {/* Leaderboard Card - Moved Up */}
                 <TouchableOpacity
@@ -474,47 +385,6 @@ export const HomeScreen = ({
                     </View>
                     <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.12)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 8 }}>
                         <Text style={{ color: '#10b981', fontWeight: '700', fontSize: 12 }}>+$0.08</Text>
-                    </View>
-                    <MaterialIcons name="chevron-right" size={20} color={theme.textSecondary} />
-                </TouchableOpacity>
-
-                {/* LinguaLink - Download our Language Learning App */}
-                <TouchableOpacity
-                    onPress={() => {
-                        if (Platform.OS === 'web') {
-                            window.location.href = '/lingualink';
-                        } else {
-                            Linking.openURL('https://xum.ai/lingualink');
-                        }
-                    }}
-                    activeOpacity={0.9}
-                    style={{
-                        backgroundColor: theme.surface,
-                        borderRadius: 16,
-                        padding: 16,
-                        marginBottom: SPACING.lg,
-                        borderWidth: 1,
-                        borderColor: 'rgba(6, 182, 212, 0.25)',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                    }}
-                >
-                    <View style={{
-                        width: 48, height: 48, borderRadius: 24,
-                        backgroundColor: 'rgba(6, 182, 212, 0.12)',
-                        justifyContent: 'center', alignItems: 'center',
-                        marginRight: 14,
-                    }}>
-                        <MaterialIcons name="language" size={24} color="#06b6d4" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={{ color: theme.text, fontWeight: '800', fontSize: 15 }}>LinguaLink</Text>
-                        <Text style={{ color: theme.textSecondary, fontSize: 12, marginTop: 2 }}>
-                            AI-powered language learning • Download Free
-                        </Text>
-                    </View>
-                    <View style={{ backgroundColor: 'rgba(6, 182, 212, 0.12)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 8 }}>
-                        <Text style={{ color: '#06b6d4', fontWeight: '700', fontSize: 12 }}>NEW</Text>
                     </View>
                     <MaterialIcons name="chevron-right" size={20} color={theme.textSecondary} />
                 </TouchableOpacity>

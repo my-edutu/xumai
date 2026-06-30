@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     },
     logoText: {
         fontSize: 32,
-        fontWeight: '700',
+        fontWeight: '900',
         color: '#fff',
         letterSpacing: 4,
         marginBottom: 16,

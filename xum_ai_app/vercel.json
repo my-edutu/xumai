@@ -1,14 +1,6 @@
 {
     "rewrites": [
         {
-            "source": "/lingualink",
-            "destination": "/"
-        },
-        {
-            "source": "/(.*)\\.(apk|aab|ipa|txt|pdf|zip)",
-            "destination": "/$1.$2"
-        },
-        {
             "source": "/(.*)",
             "destination": "/"
         }
