@@ -31,6 +31,13 @@ import { useTheme } from '../context/ThemeContext';
 import { ScreenName } from '../types';
 import { getAccountType, AccountType } from './AccountTypeScreen';
 import { countries } from '../utils/countries';
+import {
+    captureReferralFromUrl,
+    getPendingReferralCode,
+    storePendingReferralCode,
+    clearPendingReferralCode,
+    normalizeReferralCode,
+} from '../services/referralService';
 
 // NOTE: WebBrowser.maybeCompleteAuthSession() is called in index.tsx at module level
 // to handle OAuth redirect callbacks when the app resumes.
@@ -792,6 +799,7 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
     const [isCountryModalVisible, setIsCountryModalVisible] = useState(false);
     const [countrySearch, setCountrySearch] = useState('');
     const [accountType, setAccountType] = useState<AccountType | null>(null);
+    const [referralCode, setReferralCode] = useState('');
 
     // Auto-fill username from email prefix if not manually edited
     useEffect(() => {
@@ -806,6 +814,20 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
     // Read stored account type on mount for branding & post-auth destination
     useEffect(() => {
         getAccountType().then(setAccountType);
+    }, []);
+
+    // Prefill the referral code from an incoming `?ref=` link (web) or a
+    // previously stored pending code, then switch to Sign Up so it's used.
+    useEffect(() => {
+        (async () => {
+            const fromUrl = captureReferralFromUrl();
+            const code = fromUrl || (await getPendingReferralCode());
+            if (code) {
+                setReferralCode(code);
+                await storePendingReferralCode(code);
+                setMode('SignUp');
+            }
+        })();
     }, []);
 
     /** Navigate to the correct destination after successful auth */
@@ -1123,6 +1145,15 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                     return;
                 }
 
+                // Persist any referral code so it survives the OTP step and
+                // is applied once the Supabase user row is created.
+                const normalizedReferral = normalizeReferralCode(referralCode);
+                if (normalizedReferral) {
+                    await storePendingReferralCode(normalizedReferral);
+                } else if (referralCode.trim() === '') {
+                    await clearPendingReferralCode();
+                }
+
                 await signUp.create({
                     emailAddress: normalizedEmail,
                     username: sanitizedUsername,
@@ -1412,6 +1443,18 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                                             onChangeText={setConfirmPassword}
                                         />
                                     </View>
+                                )}
+
+                                {mode === 'SignUp' && (
+                                    <TextInput
+                                        style={[authStyles.inputFull, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, marginTop: 16 }]}
+                                        placeholder="Referral code (optional)"
+                                        placeholderTextColor={theme.textSecondary}
+                                        autoCapitalize="characters"
+                                        autoCorrect={false}
+                                        value={referralCode}
+                                        onChangeText={setReferralCode}
+                                    />
                                 )}
 
                                 {error && <Text style={authStyles.errorTextSmall}>{error}</Text>}

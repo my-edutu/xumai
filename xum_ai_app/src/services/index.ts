@@ -51,6 +51,19 @@ export {
 // User Profile & Preferences
 export { UserService } from './userService';
 
+// Referrals
+export {
+    deriveReferralCode,
+    referralLinkFor,
+    normalizeReferralCode,
+    captureReferralFromUrl,
+    storePendingReferralCode,
+    getPendingReferralCode,
+    clearPendingReferralCode,
+    applyPendingReferral,
+    REFERRAL_BASE_REWARD,
+} from './referralService';
+
 // Types
 export * from './types';
 

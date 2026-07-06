@@ -28,6 +28,7 @@ const tokenCache = {
     },
 };
 import { supabase, isSupabaseConfigured } from '../supabaseClient';
+import { applyPendingReferral } from '../services/referralService';
 
 // Get the publishable key from environment
 const getClerkPublishableKey = (): string => {
@@ -151,6 +152,10 @@ const ClerkSupabaseSync: React.FC<{ children: React.ReactNode }> = ({ children }
                         console.log('[ClerkSync] User synced to Supabase:', user.id);
                     }
                 }
+
+                // Record any pending referral now that the user row exists.
+                // Idempotent + best-effort: the RPC no-ops if already referred.
+                await applyPendingReferral(user.id);
             } catch (err: any) {
                 console.warn('[ClerkSync] Network error:', err.message);
             }

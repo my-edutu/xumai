@@ -19,6 +19,7 @@ import { useTheme } from '../context/ThemeContext';
 import { ScreenName } from '../types';
 import { createGlobalStyles } from '../styles';
 import { supabase } from '../supabaseClient';
+import { deriveReferralCode, referralLinkFor } from '../services/referralService';
 
 interface ReferralsScreenProps {
     onNavigate: (s: ScreenName) => void;
@@ -43,12 +44,9 @@ export const ReferralsScreen: React.FC<ReferralsScreenProps> = ({ onNavigate, on
     const [totalEarned, setTotalEarned] = useState(0);
     const [copied, setCopied] = useState(false);
 
-    // Generate referral code from user ID (last 8 chars, uppercase)
-    const referralCode = session?.user?.id
-        ? `XUM-${session.user.id.replace(/-/g, '').slice(-8).toUpperCase()}`
-        : 'XUM-LOADING';
-
-    const referralLink = `https://xum.ai/join?ref=${referralCode}`;
+    // Shared derivation — must match apply_referral() in the SQL migration.
+    const referralCode = deriveReferralCode(session?.user?.id);
+    const referralLink = referralLinkFor(referralCode);
 
     useEffect(() => {
         loadReferrals();
