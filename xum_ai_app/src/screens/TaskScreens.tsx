@@ -1094,7 +1094,7 @@ export const TextInputTaskScreen: React.FC<ScreenProps> = ({ onNavigate, onCompl
   const handleSubmit = async () => {
     setStatus('submitting');
     try {
-      await TaskService.submitPayload('mock-id-1', { response: value }, 0.50, 25);
+      await TaskService.submitPayload('text-freeform', { response: value, type: 'text' }, 0.50, 25);
       setStatus('success');
       onCompleteTask?.(0.50, 25);
       setTimeout(() => onNavigate(ScreenName.TASK_SUCCESS), 1500);

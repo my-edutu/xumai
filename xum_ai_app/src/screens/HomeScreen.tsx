@@ -98,9 +98,7 @@ export const HomeScreen = ({
 
             // Reload feed as well
             const tasks = await getFeedTasks(selectedCategory);
-            if (tasks && tasks.length > 0) {
-                setFeedTasks(tasks);
-            }
+            setFeedTasks(tasks || []);
         } catch (error) {
             console.error('Error refreshing home data:', error);
         } finally {
@@ -108,37 +106,19 @@ export const HomeScreen = ({
         }
     }, [session?.user?.id, selectedCategory]);
 
-    // Mock Feed Data as fallback
-    const FEED_DATA = [
-        { id: '1', type: 'Voice', title: 'Train AI through Voice Recording', subtitle: 'Help train AI assistants', reward: 1.50, time: '2 min', difficulty: 'Easy', icon: 'mic', color: '#ec4899', screen: ScreenName.VOICE_TASK },
-        { id: '2', type: 'Image', title: 'Train AI through Image Capture', subtitle: 'Draw bounding boxes', reward: 0.80, time: '1 min', difficulty: 'Medium', icon: 'image', color: '#8b5cf6', screen: ScreenName.IMAGE_TASK },
-        { id: '3', type: 'Text', title: 'Sentiment Analysis', subtitle: 'Rate customer reviews', reward: 0.50, time: '1 min', difficulty: 'Easy', icon: 'text-fields', color: '#3b82f6', screen: ScreenName.LINGUASENSE_ENGINE },
-        { id: '4', type: 'Video', title: 'Train AI through Video Collection', subtitle: 'Record specific gestures', reward: 5.00, time: '5 min', difficulty: 'Hard', icon: 'videocam', color: '#10b981', screen: ScreenName.VIDEO_TASK },
-    ];
-
     const [selectedCategory, setSelectedCategory] = useState('All');
 
-    // Fetch feed when category changes
+    // Fetch feed when category changes — real tasks only; the empty state
+    // below handles categories with no active tasks.
     useEffect(() => {
         const loadFeed = async () => {
             setIsLoadingFeed(true);
             try {
                 const tasks = await getFeedTasks(selectedCategory);
-                if (tasks && tasks.length > 0) {
-                    setFeedTasks(tasks);
-                } else {
-                    // Fallback to mock data if no real tasks
-                    const filtered = selectedCategory === 'All'
-                        ? FEED_DATA
-                        : FEED_DATA.filter(t => t.type === selectedCategory);
-                    setFeedTasks(filtered);
-                }
+                setFeedTasks(tasks || []);
             } catch (error) {
-                console.warn('Failed to fetch tasks, using fallback', error);
-                const filtered = selectedCategory === 'All'
-                    ? FEED_DATA
-                    : FEED_DATA.filter(t => t.type === selectedCategory);
-                setFeedTasks(filtered);
+                console.warn('Failed to fetch tasks', error);
+                setFeedTasks([]);
             } finally {
                 setIsLoadingFeed(false);
             }

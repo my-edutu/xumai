@@ -1,3 +1,5 @@
+import { supabase, isSupabaseConfigured } from '../supabaseClient';
+
 export interface DataGap {
     id: string;
     title: string;
@@ -11,68 +13,85 @@ export interface DataGap {
     };
 }
 
+const MODALITIES: Array<DataGap['recommended_action']['type']> = ['voice', 'image', 'video', 'text'];
+
+// Coverage target: how many submissions each active prompt should ideally
+// collect before a modality counts as fully covered.
+const TARGET_SUBMISSIONS_PER_PROMPT = 10;
+
+const severityFor = (coverage: number): DataGap['severity'] => {
+    if (coverage < 25) return 'critical';
+    if (coverage < 50) return 'high';
+    if (coverage < 75) return 'medium';
+    return 'low';
+};
+
+const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 /**
- * Mock Service to simulate the "Data Gap Engine"
- * In production, this would query an analytics DB or run a background ML job.
+ * Data Gap Engine — computes live coverage per modality from real data:
+ * active capture_prompts vs. collected submissions.
  */
 export const GapService = {
 
     /**
-     * Run a "Gap Analysis" to find missing data
+     * Run a gap analysis across all modalities.
+     * Returns one entry per modality that has active prompts, ordered by
+     * severity (least-covered first).
      */
     detectGaps: async (): Promise<DataGap[]> => {
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        if (!isSupabaseConfigured) {
+            throw new Error('Supabase not configured');
+        }
 
-        return [
-            {
-                id: 'gap_01',
-                title: 'Medical Terms in Hausa',
-                description: 'Model hallucinates when translating medical instructions to Hausa.',
-                region: 'Kano, Nigeria',
-                severity: 'critical',
-                coverage_percentage: 12,
-                recommended_action: {
-                    type: 'voice',
-                    prompt_context: 'Hausa Medical Terminology'
-                }
-            },
-            {
-                id: 'gap_02',
-                title: 'Street Signs at Night',
-                description: 'Computer Vision model fails to detect signs in low-light conditions.',
-                region: 'Lagos, Nigeria',
-                severity: 'high',
-                coverage_percentage: 35,
-                recommended_action: {
-                    type: 'image',
-                    prompt_context: 'Street Signs (Night/Low Light)'
-                }
-            },
-            {
-                id: 'gap_03',
-                title: 'Pidgin Slang 2024',
-                description: 'New slang terms from social media are missing from the training set.',
-                region: 'Online / Social',
-                severity: 'medium',
-                coverage_percentage: 55,
-                recommended_action: {
-                    type: 'text',
-                    prompt_context: 'Trending Pidgin Slang'
-                }
-            },
-            {
-                id: 'gap_04',
-                title: 'Rural Market Sounds',
-                description: 'Audio model struggles to separate speech from market noise.',
-                region: 'Onitsha, Nigeria',
-                severity: 'low',
-                coverage_percentage: 78,
-                recommended_action: {
-                    type: 'video',
-                    prompt_context: 'Busy Market Interactions'
-                }
+        const gaps = await Promise.all(MODALITIES.map(async (modality): Promise<DataGap | null> => {
+            try {
+                const [promptResult, submissionResult, topPromptResult] = await Promise.all([
+                    supabase
+                        .from('capture_prompts')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('task_type', modality)
+                        .eq('is_active', true),
+                    supabase
+                        .from('submissions')
+                        .select('*', { count: 'exact', head: true })
+                        .filter('submission_data->>task_type', 'eq', modality),
+                    supabase
+                        .from('capture_prompts')
+                        .select('category')
+                        .eq('task_type', modality)
+                        .eq('is_active', true)
+                        .order('base_reward', { ascending: false })
+                        .limit(1),
+                ]);
+
+                const promptCount = promptResult.count ?? 0;
+                if (promptCount === 0) return null; // nothing requested for this modality
+
+                const submissionCount = submissionResult.count ?? 0;
+                const target = promptCount * TARGET_SUBMISSIONS_PER_PROMPT;
+                const coverage = Math.min(100, Math.round((submissionCount / target) * 100));
+                const topCategory = topPromptResult.data?.[0]?.category || 'General';
+
+                return {
+                    id: `gap_${modality}`,
+                    title: `${titleCase(modality)} data coverage`,
+                    description: `${submissionCount} submission${submissionCount === 1 ? '' : 's'} collected across ${promptCount} active prompt${promptCount === 1 ? '' : 's'}.`,
+                    region: 'Network-wide',
+                    severity: severityFor(coverage),
+                    coverage_percentage: coverage,
+                    recommended_action: {
+                        type: modality,
+                        prompt_context: topCategory,
+                    },
+                };
+            } catch (err) {
+                console.warn(`[GapService] ${modality} coverage query failed`, err);
+                return null;
             }
-        ];
+        }));
+
+        const results = gaps.filter((g): g is DataGap => g !== null);
+        return results.sort((a, b) => a.coverage_percentage - b.coverage_percentage);
     }
 };
