@@ -1,4 +1,5 @@
 import './global.css';
+import './web-shell.css'; // Web-only app shell (compiled out on native, like global.css)
 import { registerRootComponent } from 'expo';
 
 import * as WebBrowser from 'expo-web-browser';

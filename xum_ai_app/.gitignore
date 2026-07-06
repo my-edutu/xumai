@@ -48,3 +48,6 @@ credentials.json
 
 # Generated native folders - regenerate with expo prebuild
 /android/
+
+# Metro web export
+dist-web/

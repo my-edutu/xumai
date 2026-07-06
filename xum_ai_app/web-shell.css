@@ -1,0 +1,247 @@
+/* ============================================================================
+   XUM AI — WEB SHELL (mobile-first best practices)
+   Imported from index.tsx: applies to the Metro (expo export) and Vite web
+   builds. Native builds ignore it. Keep everything here web-only.
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   1. App-like interaction defaults
+   ---------------------------------------------------------------------------- */
+html {
+    /* Prevent iOS/Android font inflation in landscape */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    /* Kill the 300ms double-tap zoom delay; keep pinch-zoom for a11y */
+    touch-action: manipulation;
+    /* No blue flash on taps — feedback comes from the app's press states */
+    -webkit-tap-highlight-color: transparent;
+    /* No page-level rubber-banding / accidental pull-to-refresh; the app's
+       own ScrollViews handle overscroll */
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #e2e8f0;
+    /* Ambient brand-tinted backdrop sits behind the app frame on desktop */
+    background-color: #05070f;
+    background-image:
+        radial-gradient(1100px 620px at 12% -12%, rgba(19, 73, 236, 0.18), transparent 60%),
+        radial-gradient(900px 520px at 100% -8%, rgba(139, 92, 246, 0.12), transparent 55%),
+        radial-gradient(820px 820px at 50% 118%, rgba(19, 73, 236, 0.10), transparent 60%);
+    background-attachment: fixed;
+}
+
+/* App chrome shouldn't be draggable/selectable like a document; inputs and
+   text fields keep normal behavior via the override below. */
+img {
+    -webkit-user-drag: none;
+    user-drag: none;
+}
+
+input,
+textarea,
+[contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+/* iOS Safari zooms the page when focusing inputs under 16px — guard on
+   touch devices only so desktop keeps the app's designed sizes. */
+@media (pointer: coarse) {
+
+    input,
+    textarea,
+    select {
+        font-size: max(16px, 1em);
+    }
+}
+
+/* Respect notches / home indicators when running as an installed PWA */
+@media (display-mode: standalone) {
+    #root {
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+}
+
+/* ----------------------------------------------------------------------------
+   2. App shell — full-bleed on phones, centered phone frame on desktop
+   ---------------------------------------------------------------------------- */
+html,
+body,
+#root {
+    height: 100%;
+}
+
+#root {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    min-height: 100%;
+    min-height: 100dvh;
+}
+
+/* The React Native app container is the first (and only) child of #root */
+#root>div {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+@media (min-width: 600px) {
+    #root {
+        align-items: center;
+        padding: 28px 24px;
+    }
+
+    #root>div {
+        height: calc(100vh - 56px);
+        height: calc(100dvh - 56px);
+        max-height: 940px;
+        border-radius: 30px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        box-shadow:
+            0 40px 90px -24px rgba(0, 0, 0, 0.75),
+            0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+            0 1px 0 0 rgba(255, 255, 255, 0.06) inset;
+    }
+}
+
+/* ----------------------------------------------------------------------------
+   3. Web polish — scrollbars, focus, selection, feedback, motion
+   ---------------------------------------------------------------------------- */
+
+/* Slim, themed scrollbars (replaces the OS default heavy bars) */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.26);
+    background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Keyboard focus ring for accessibility — mouse/touch users don't see it */
+:focus-visible {
+    outline: 2px solid #3b6bff;
+    outline-offset: 2px;
+    border-radius: 8px;
+}
+
+::selection {
+    background: rgba(19, 73, 236, 0.38);
+    color: #fff;
+}
+
+/* Tasteful hover/press feedback on interactive elements (React Native Web
+   marks Touchables with role="button"). Only where a real pointer exists. */
+[role="button"] {
+    transition: filter 150ms ease, transform 150ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    [role="button"]:hover {
+        filter: brightness(1.08);
+    }
+}
+
+[role="button"]:active {
+    transform: scale(0.985);
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ----------------------------------------------------------------------------
+   4. Custom utility classes referenced by screens via className
+   (nativewind passes className through to the DOM on web)
+   ---------------------------------------------------------------------------- */
+.glass {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Safe area padding for mobile */
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+@keyframes slideUp {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes progress {
+    0% {
+        width: 0;
+    }
+
+    100% {
+        width: 100%;
+    }
+}
+
+.animate-progress {
+    animation: progress 2s ease-in-out forwards;
+}

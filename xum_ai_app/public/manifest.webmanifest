@@ -1,0 +1,25 @@
+{
+    "name": "XUM AI",
+    "short_name": "XUM AI",
+    "description": "Earn by training AI — voice, image, video and text tasks. Real rewards for real human data.",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#101522",
+    "theme_color": "#101522",
+    "icons": [
+        {
+            "src": "/icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
