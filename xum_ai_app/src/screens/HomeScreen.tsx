@@ -167,9 +167,14 @@ export const HomeScreen = ({
                 {/* Header */}
                 <View style={styles.homeHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                        <Text style={[TEXT_STYLES.h4, { color: theme.text, fontWeight: '700', letterSpacing: 1, fontSize: 24 }]}>
-                            XUM <Text style={{ color: theme.primary }}>AI</Text>
-                        </Text>
+                        <View>
+                            <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '600', letterSpacing: 0.5, marginBottom: 2 }}>
+                                Welcome back
+                            </Text>
+                            <Text style={[TEXT_STYLES.h4, { color: theme.text, fontWeight: '700', letterSpacing: 1, fontSize: 24 }]}>
+                                XUM <Text style={{ color: theme.primary }}>AI</Text>
+                            </Text>
+                        </View>
                         {streakDays > 0 && (
                             <View style={{
                                 flexDirection: 'row',
@@ -203,20 +208,24 @@ export const HomeScreen = ({
                 {/* Earnings Stats Bar - Redesigned */}
                 <View style={styles.statsRow}>
                     <Card style={{ flex: 1, padding: SPACING.md }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                            <MaterialIcons name="today" size={16} color={theme.primary} style={{ marginRight: 6 }} />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                            <View style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: rgba(theme.primary, 0.14), alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                                <MaterialIcons name="today" size={15} color={theme.primary} />
+                            </View>
                             <Text style={{ color: theme.textSecondary, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>EARNED TODAY</Text>
                         </View>
-                        <Text style={{ fontSize: 22, fontWeight: '800', color: theme.text }}>
+                        <Text style={{ fontSize: 23, fontWeight: '800', color: theme.text, letterSpacing: -0.5 }}>
                             ${earningsPeriod.today.toFixed(2)}
                         </Text>
                     </Card>
                     <Card style={{ flex: 1, padding: SPACING.md }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                            <MaterialIcons name="date-range" size={16} color={theme.success} style={{ marginRight: 6 }} />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                            <View style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: rgba(theme.success, 0.14), alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                                <MaterialIcons name="date-range" size={15} color={theme.success} />
+                            </View>
                             <Text style={{ color: theme.textSecondary, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>THIS MONTH</Text>
                         </View>
-                        <Text style={{ fontSize: 22, fontWeight: '800', color: theme.text }}>
+                        <Text style={{ fontSize: 23, fontWeight: '800', color: theme.text, letterSpacing: -0.5 }}>
                             ${earningsPeriod.month.toFixed(2)}
                         </Text>
                     </Card>
@@ -489,7 +498,7 @@ export const HomeScreen = ({
 
                 {/* Task Feed */}
                 <View style={{ marginTop: SPACING.sm }}>
-                    <Text style={[TEXT_STYLES.h6, { color: theme.text, marginBottom: SPACING.md }]}>
+                    <Text style={[TEXT_STYLES.h4, { color: theme.text, marginBottom: SPACING.md, fontSize: 17, fontWeight: '700' }]}>
                         Available Tasks
                     </Text>
 

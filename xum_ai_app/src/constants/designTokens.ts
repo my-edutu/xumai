@@ -120,33 +120,34 @@ export const SHADOWS = {
         shadowRadius: 0,
         elevation: 0,
     },
+    // Softer, larger-radius elevation reads as premium depth on dark surfaces.
     sm: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.18,
-        shadowRadius: 1.0,
-        elevation: 1,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.16,
+        shadowRadius: 8,
+        elevation: 2,
     },
     md: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.22,
+        shadowRadius: 20,
+        elevation: 6,
     },
     lg: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 16 },
         shadowOpacity: 0.30,
-        shadowRadius: 4.65,
-        elevation: 8,
+        shadowRadius: 36,
+        elevation: 12,
     },
     glow: (color: string) => ({
         shadowColor: color,
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.4,
-        shadowRadius: 10,
-        elevation: 10,
+        shadowOpacity: 0.45,
+        shadowRadius: 16,
+        elevation: 12,
     })
 } as const;
 
