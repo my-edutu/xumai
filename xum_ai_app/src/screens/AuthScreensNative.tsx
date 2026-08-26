@@ -20,6 +20,7 @@ import {
     SafeAreaView,
     FlatList,
     Modal,
+    useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -31,6 +32,7 @@ import { useTheme } from '../context/ThemeContext';
 import { ScreenName } from '../types';
 import { getAccountType, AccountType } from './AccountTypeScreen';
 import { countries } from '../utils/countries';
+import { AUTH_FONT_WEIGHTS, getAuthLayoutMetrics } from '../utils/authLayout';
 import {
     captureReferralFromUrl,
     getPendingReferralCode,
@@ -570,7 +572,7 @@ const onboardingStyles = StyleSheet.create({
     skipText: {
         color: 'rgba(255, 255, 255, 0.6)',
         fontSize: 12,
-        fontWeight: '900',
+        fontWeight: AUTH_FONT_WEIGHTS.label,
         textTransform: 'uppercase',
         letterSpacing: 2,
     },
@@ -622,7 +624,7 @@ const onboardingStyles = StyleSheet.create({
     },
     methodText: {
         fontSize: 10,
-        fontWeight: '900',
+        fontWeight: AUTH_FONT_WEIGHTS.label,
         color: 'rgba(255, 255, 255, 0.4)',
         textTransform: 'uppercase',
         letterSpacing: 1,
@@ -644,7 +646,7 @@ const onboardingStyles = StyleSheet.create({
     },
     pendingTitle: {
         fontSize: 24,
-        fontWeight: '900',
+        fontWeight: AUTH_FONT_WEIGHTS.title,
         color: 'white',
         letterSpacing: 2,
         marginBottom: 10,
@@ -681,7 +683,7 @@ const onboardingStyles = StyleSheet.create({
         marginBottom: 20,
     },
     pendingBtnText: {
-        fontWeight: '900',
+        fontWeight: AUTH_FONT_WEIGHTS.button,
         fontSize: 14,
         letterSpacing: 1,
     },
@@ -691,7 +693,7 @@ const onboardingStyles = StyleSheet.create({
     resendLinkText: {
         color: 'rgba(255,255,255,0.4)',
         fontSize: 10,
-        fontWeight: '900',
+        fontWeight: AUTH_FONT_WEIGHTS.label,
         letterSpacing: 1,
     },
     iconLabel: {
@@ -703,7 +705,7 @@ const onboardingStyles = StyleSheet.create({
     },
     iconValue: {
         fontSize: 14,
-        fontWeight: '700',
+        fontWeight: AUTH_FONT_WEIGHTS.button,
     },
     textContainer: {
         marginBottom: 24,
@@ -750,7 +752,7 @@ const onboardingStyles = StyleSheet.create({
     termsText: {
         fontSize: 11,
         color: 'rgba(255, 255, 255, 0.6)',
-        fontWeight: '700',
+        fontWeight: AUTH_FONT_WEIGHTS.label,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
         flex: 1,
@@ -781,6 +783,8 @@ const onboardingStyles = StyleSheet.create({
 export const AuthScreen = ({ onNavigate }: ScreenProps) => {
     const { theme } = useTheme();
     useWarmUpBrowser();
+    const { width, height } = useWindowDimensions();
+    const authLayout = useMemo(() => getAuthLayoutMetrics(width, height), [width, height]);
 
     const [mode, setMode] = useState<'Login' | 'SignUp'>('Login');
     const [showEmailForm, setShowEmailForm] = useState(false);
@@ -1231,23 +1235,40 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={[authStyles.container, { backgroundColor: theme.background }]}
         >
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false} keyboardShouldPersistTaps="handled">
+            <ScrollView
+                contentContainerStyle={authStyles.scrollContent}
+                bounces={false}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+            >
                 {/* Visual Header Background (Textured Design) */}
-                <View style={[authStyles.visualHeader, { backgroundColor: theme.primaryDark, height: SCREEN_HEIGHT * 0.35 }]}>
+                <View style={[authStyles.visualHeader, { backgroundColor: theme.primaryDark, height: authLayout.headerHeight }]}>
                     <View style={[authStyles.blob, { backgroundColor: theme.accent, top: -40, right: -40, opacity: 0.6, transform: [{ rotate: '15deg' }] }]} />
                     <View style={[authStyles.blob, { backgroundColor: theme.primary, bottom: -60, left: -60, opacity: 0.4, transform: [{ rotate: '-10deg' }] }]} />
                     <View style={[authStyles.blob, { backgroundColor: theme.success, top: 40, left: -80, opacity: 0.3, width: 220, height: 220 }]} />
 
-                    <SafeAreaView style={authStyles.headerSafeArea}>
-                        <TouchableOpacity style={authStyles.miniBackButton} onPress={() => onNavigate(ScreenName.ACCOUNT_TYPE_SELECT)}>
+                    <SafeAreaView style={[authStyles.headerSafeArea, { paddingHorizontal: authLayout.horizontalPadding }]}>
+                        <TouchableOpacity
+                            style={authStyles.miniBackButton}
+                            onPress={() => onNavigate(ScreenName.ACCOUNT_TYPE_SELECT)}
+                            accessibilityRole="button"
+                            accessibilityLabel="Back to account type selection"
+                            hitSlop={8}
+                        >
                             <MaterialIcons name="arrow-back" size={24} color="white" />
                         </TouchableOpacity>
-                        <View style={{ marginTop: 'auto', marginBottom: 60, paddingHorizontal: 20 }}>
+                        <View style={{ marginTop: 'auto', marginBottom: authLayout.isCompact ? 36 : 60 }}>
                             <TypeWriterText
                                 text={mode === 'Login'
                                     ? (isCompanyMode ? 'Company Sign In' : 'Welcome back')
                                     : (isCompanyMode ? 'Create Company Account' : 'Create an account')}
-                                style={authStyles.mainTitle}
+                                style={[
+                                    authStyles.mainTitle,
+                                    {
+                                        fontSize: authLayout.isCompact ? 30 : 42,
+                                        lineHeight: authLayout.isCompact ? 36 : 46,
+                                    },
+                                ]}
                             />
                         </View>
                     </SafeAreaView>
@@ -1256,12 +1277,15 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                 {/* Main Auth Card */}
                 <View style={[authStyles.card, {
                     backgroundColor: theme.surface,
-                    marginTop: -50,
-                    borderTopLeftRadius: 40,
-                    borderTopRightRadius: 40,
-                    paddingHorizontal: SCREEN_WIDTH * 0.08,
-                    paddingTop: 40,
-                    paddingBottom: 60,
+                    marginTop: authLayout.isCompact ? -36 : -50,
+                    borderTopLeftRadius: authLayout.isCompact ? 32 : 40,
+                    borderTopRightRadius: authLayout.isCompact ? 32 : 40,
+                    paddingHorizontal: authLayout.horizontalPadding,
+                    paddingTop: authLayout.isCompact ? 28 : 40,
+                    paddingBottom: authLayout.isCompact ? 40 : 60,
+                    maxWidth: authLayout.contentMaxWidth,
+                    width: '100%',
+                    alignSelf: 'center',
                     flex: 1
                 }]}>
                     {/* Two-Step Auth Flow */}
@@ -1269,39 +1293,53 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                         <>
                             {/* Initial Options: Google + Apple + Email buttons */}
                             <TouchableOpacity
-                                style={[authStyles.socialButton, { backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }]}
+                                style={[authStyles.socialButton, { backgroundColor: '#FFFFFF', borderColor: '#E5E7EB', height: authLayout.buttonHeight, opacity: loading ? 0.65 : 1 }]}
                                 activeOpacity={0.7}
                                 onPress={handleGoogleLogin}
                                 disabled={loading}
+                                accessibilityRole="button"
+                                accessibilityLabel={mode === 'Login' ? 'Sign in with Google' : 'Sign up with Google'}
+                                accessibilityState={{ disabled: loading, busy: loading }}
                             >
-                                <View style={{ width: 24, height: 24, marginRight: 12, alignItems: 'center', justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 18, fontWeight: '700', color: '#4285F4' }}>G</Text>
+                                <View style={authStyles.buttonInner}>
+                                    <View style={authStyles.socialIcon}>
+                                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#4285F4' }}>G</Text>
+                                    </View>
+                                    <Text style={[authStyles.socialButtonText, { color: '#1F2937' }]}>
+                                        {loading ? 'WAITING…' : mode === 'Login' ? 'Sign in with Google' : 'Sign up with Google'}
+                                    </Text>
                                 </View>
-                                <Text style={[authStyles.socialButtonText, { color: '#1F2937' }]}>
-                                    {loading ? 'WAITING...' : mode === 'Login' ? 'Sign in with Google' : 'Sign up with Google'}
-                                </Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={[authStyles.socialButton, { backgroundColor: '#000000', borderColor: '#000000', marginTop: 16 }]}
+                                style={[authStyles.socialButton, { backgroundColor: '#000000', borderColor: '#000000', marginTop: authLayout.isCompact ? 12 : 16, height: authLayout.buttonHeight, opacity: loading ? 0.65 : 1 }]}
                                 activeOpacity={0.7}
                                 onPress={handleAppleLogin}
                                 disabled={loading}
+                                accessibilityRole="button"
+                                accessibilityLabel={mode === 'Login' ? 'Sign in with Apple' : 'Sign up with Apple'}
+                                accessibilityState={{ disabled: loading, busy: loading }}
                             >
-                                <MaterialIcons name="apple" size={24} color="#fff" style={{ marginRight: 12 }} />
-                                <Text style={[authStyles.socialButtonText, { color: '#fff' }]}>
-                                    {loading ? 'WAITING...' : mode === 'Login' ? 'Sign in with Apple' : 'Sign up with Apple'}
-                                </Text>
+                                <View style={authStyles.buttonInner}>
+                                    <MaterialIcons name="apple" size={24} color="#fff" style={authStyles.socialIcon} />
+                                    <Text style={[authStyles.socialButtonText, { color: '#fff' }]}>
+                                        {loading ? 'WAITING…' : mode === 'Login' ? 'Sign in with Apple' : 'Sign up with Apple'}
+                                    </Text>
+                                </View>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[authStyles.socialButton, { backgroundColor: theme.primary, borderColor: theme.primary, marginTop: 16 }]}
+                                style={[authStyles.socialButton, { backgroundColor: theme.primary, borderColor: theme.primary, marginTop: authLayout.isCompact ? 12 : 16, height: authLayout.buttonHeight }]}
                                 activeOpacity={0.7}
                                 onPress={() => { setError(null); setShowEmailForm(true); }}
+                                accessibilityRole="button"
+                                accessibilityLabel={mode === 'Login' ? 'Sign in with email' : 'Sign up with email'}
                             >
-                                <MaterialIcons name="email" size={24} color="#fff" style={{ marginRight: 12 }} />
-                                <Text style={[authStyles.socialButtonText, { color: '#fff' }]}>
-                                    {mode === 'Login' ? 'Sign in with Email' : 'Sign up with Email'}
-                                </Text>
+                                <View style={authStyles.buttonInner}>
+                                    <MaterialIcons name="email" size={24} color="#fff" style={authStyles.socialIcon} />
+                                    <Text style={[authStyles.socialButtonText, { color: '#fff' }]}>
+                                        {mode === 'Login' ? 'Sign in with Email' : 'Sign up with Email'}
+                                    </Text>
+                                </View>
                             </TouchableOpacity>
 
                             {error && (
@@ -1315,8 +1353,15 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                             </View>
 
                             {/* Switch Mode Link */}
-                            <TouchableOpacity onPress={() => { setError(null); setMode(mode === 'Login' ? 'SignUp' : 'Login'); }}>
-                                <Text style={{ color: theme.textSecondary, textAlign: 'center', fontSize: 14 }}>
+                            <TouchableOpacity
+                                style={[authStyles.modeToggleButton, { borderColor: theme.border }]}
+                                onPress={() => { setError(null); setMode(mode === 'Login' ? 'SignUp' : 'Login'); }}
+                                accessibilityRole="button"
+                                accessibilityLabel={mode === 'Login' ? 'Switch to sign up' : 'Switch to sign in'}
+                                hitSlop={8}
+                                activeOpacity={0.75}
+                            >
+                                <Text style={[authStyles.modeToggleText, { color: theme.textSecondary }]}>
                                     {mode === 'Login' ? "Don't have an account? " : "Already have an account? "}
                                     <Text style={{ color: theme.primary, fontWeight: '600' }}>
                                         {mode === 'Login' ? 'Sign Up' : 'Sign In'}
@@ -1460,13 +1505,16 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                                 {error && <Text style={authStyles.errorTextSmall}>{error}</Text>}
 
                                 <TouchableOpacity
-                                    style={[authStyles.primaryButton, { backgroundColor: theme.primary, marginTop: 24 }]}
+                                    style={[authStyles.primaryButton, { backgroundColor: theme.primary, marginTop: authLayout.isCompact ? 20 : 24, height: authLayout.buttonHeight, opacity: loading ? 0.65 : 1 }]}
                                     onPress={handleSubmit}
                                     disabled={loading}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={mode === 'Login' ? 'Log in' : 'Create account'}
+                                    accessibilityState={{ disabled: loading, busy: loading }}
                                 >
                                     <View style={authStyles.primaryButtonInner}>
                                         <Text style={authStyles.primaryButtonText}>
-                                            {loading ? 'PLEASE WAIT...' : mode === 'Login' ? 'Login' : 'Create account'}
+                                            {loading ? 'PLEASE WAIT…' : mode === 'Login' ? 'Login' : 'Create account'}
                                         </Text>
                                         {!loading && <MaterialIcons name="arrow-forward" size={20} color="white" style={{ marginLeft: 8 }} />}
                                     </View>
@@ -1559,6 +1607,10 @@ const authStyles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    scrollContent: {
+        flexGrow: 1,
+        width: '100%',
+    },
     visualHeader: {
         height: 280,
         position: 'relative',
@@ -1572,14 +1624,13 @@ const authStyles = StyleSheet.create({
     },
     mainTitle: {
         fontSize: SCREEN_WIDTH < 375 ? 28 : 42,
-        fontWeight: '900',
+        fontWeight: AUTH_FONT_WEIGHTS.title,
         color: 'white',
         lineHeight: SCREEN_WIDTH < 375 ? 34 : 46,
         letterSpacing: -1,
     },
     headerSafeArea: {
         flex: 1,
-        paddingHorizontal: 32,
         paddingTop: 20,
     },
     miniBackButton: {
@@ -1604,26 +1655,41 @@ const authStyles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        height: 58,
-        borderRadius: 29,
+        minHeight: 56,
+        borderRadius: 18,
         borderWidth: 1,
-        paddingHorizontal: 16,
+        paddingVertical: 16,
+        paddingHorizontal: 18,
+        width: '100%',
+    },
+    buttonInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        maxWidth: '100%',
+        minWidth: 0,
     },
     socialIcon: {
         width: 24,
         height: 24,
         marginRight: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
     },
     socialButtonText: {
         fontSize: 16,
-        fontWeight: '700',
+        fontWeight: AUTH_FONT_WEIGHTS.button,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
+        flexShrink: 1,
+        textAlign: 'center',
     },
     dividerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 32,
+        marginBottom: 24,
     },
     dividerLine: {
         flex: 1,
@@ -1632,7 +1698,7 @@ const authStyles = StyleSheet.create({
     dividerText: {
         marginHorizontal: 16,
         fontSize: 15,
-        fontWeight: '600',
+        fontWeight: AUTH_FONT_WEIGHTS.label,
     },
     formFields: {
         gap: 12,
@@ -1671,15 +1737,18 @@ const authStyles = StyleSheet.create({
     errorTextSmall: {
         color: '#ef4444',
         fontSize: 12,
-        fontWeight: '700',
+        fontWeight: AUTH_FONT_WEIGHTS.label,
         textAlign: 'center',
         marginTop: -8,
     },
     primaryButton: {
-        height: 58,
-        borderRadius: 29,
+        minHeight: 56,
+        borderRadius: 18,
         alignItems: 'center',
         justifyContent: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        width: '100%',
         marginTop: 16,
         ...Platform.select({
             web: {
@@ -1698,13 +1767,31 @@ const authStyles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        width: '100%',
+    },
+    modeToggleButton: {
+        minHeight: 50,
+        width: '100%',
+        borderWidth: 1,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 16,
+        marginTop: 4,
+    },
+    modeToggleText: {
+        textAlign: 'center',
+        fontSize: 14,
+        fontWeight: AUTH_FONT_WEIGHTS.label,
     },
     primaryButtonText: {
         color: 'white',
         fontSize: 16,
-        fontWeight: '700',
+        fontWeight: AUTH_FONT_WEIGHTS.button,
         letterSpacing: 0.5,
         textTransform: 'uppercase',
+        flexShrink: 1,
+        textAlign: 'center',
     },
     termsText: {
         fontSize: 12,
@@ -1714,7 +1801,7 @@ const authStyles = StyleSheet.create({
         paddingHorizontal: 8,
     },
     linkText: {
-        fontWeight: '700',
+        fontWeight: AUTH_FONT_WEIGHTS.link,
         textDecorationLine: 'none',
     },
     footer: {
@@ -1724,11 +1811,11 @@ const authStyles = StyleSheet.create({
     },
     footerText: {
         fontSize: 15,
-        fontWeight: '500',
+        fontWeight: AUTH_FONT_WEIGHTS.label,
     },
     footerLink: {
         fontSize: 15,
-        fontWeight: '700',
+        fontWeight: AUTH_FONT_WEIGHTS.link,
         textDecorationLine: 'none',
     },
 });
