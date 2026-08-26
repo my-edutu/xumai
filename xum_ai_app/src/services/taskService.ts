@@ -170,7 +170,7 @@ export async function checkServiceHealth(): Promise<{
         }
 
         // Simple ping to check connection
-        const { error } = await supabase.from('profiles').select('id').limit(1);
+        const { error } = await supabase.from('users').select('id').limit(1);
 
         if (error) {
             return { configured: true, connected: false, error: error.message };

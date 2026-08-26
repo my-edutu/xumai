@@ -15,6 +15,15 @@ import { createClient } from '@supabase/supabase-js';
 // ============================================================================
 
 const REQUIRED_BUCKETS = ['voice-recordings', 'image-captures', 'video-recordings'];
+const REQUIRED_TABLES = [
+    'users',
+    'tasks',
+    'submissions',
+    'submission_metadata',
+    'transactions',
+    'withdrawals',
+    'capture_prompts',
+];
 const PROJECT_NAME = 'xum ai';
 
 // ============================================================================
@@ -63,20 +72,26 @@ function validateCredentials(): { valid: boolean; errors: string[] } {
     return { valid: errors.length === 0, errors };
 }
 
-async function testDatabaseConnection(supabase: any): Promise<{ success: boolean; error?: string }> {
+async function testDatabaseConnection(supabase: any): Promise<{ success: boolean; missing: string[]; error?: string }> {
+    const missing: string[] = [];
     try {
-        const { count, error } = await supabase
-            .from('profiles')
-            .select('*', { count: 'exact', head: true });
-
-        if (error) {
-            return { success: false, error: error.message };
+        for (const table of REQUIRED_TABLES) {
+            const { error } = await supabase.from(table).select('id', { head: true, count: 'exact' });
+            if (error) {
+                const missingRelation = error.code === '42P01' || /does not exist|schema cache/i.test(error.message);
+                if (missingRelation) missing.push(table);
+                else return { success: false, missing, error: error.message };
+            }
         }
 
-        console.log(`✅ Database connection successful (profiles table found with ${count ?? 0} rows)`);
-        return { success: true };
+        if (missing.length > 0) {
+            return { success: false, missing, error: `Missing required tables: ${missing.join(', ')}` };
+        }
+
+        console.log(`✅ Database connection successful (${REQUIRED_TABLES.length} required tables found)`);
+        return { success: true, missing };
     } catch (err: any) {
-        return { success: false, error: err.message };
+        return { success: false, missing, error: err.message };
     }
 }
 
@@ -111,19 +126,23 @@ async function testStorageBuckets(supabase: any): Promise<{ success: boolean; fo
     }
 }
 
-async function testRPCFunctions(supabase: any): Promise<void> {
+async function testRPCFunctions(supabase: any): Promise<boolean> {
     try {
         const { data, error } = await supabase.rpc('get_user_balance', { p_user_id: 'test-user-id' });
 
         if (error && !error.message.includes('function') && !error.message.includes('does not exist')) {
             console.log(`✅ RPC functions are callable (test returned expected error)`);
+            return true;
         } else if (!error) {
             console.log(`✅ RPC function 'get_user_balance' executed successfully`);
+            return true;
         } else {
-            console.log(`⚠️  RPC function 'get_user_balance' may not exist: ${error.message}`);
+            console.log(`❌ RPC function 'get_user_balance' is unavailable: ${error.message}`);
+            return false;
         }
     } catch (err: any) {
-        console.log(`⚠️  RPC test failed: ${err.message}`);
+        console.log(`❌ RPC test failed: ${err.message}`);
+        return false;
     }
 }
 
@@ -161,9 +180,10 @@ async function main() {
 
     if (!dbTest.success) {
         console.log(`❌ Database connection failed: ${dbTest.error}`);
+        if (dbTest.missing.length > 0) console.log(`   Missing tables: ${dbTest.missing.join(', ')}`);
         console.log('\n💡 Possible issues:');
         console.log('   - Check if your Supabase project is active');
-        console.log('   - Verify RLS policies on the profiles table');
+        console.log('   - Verify RLS policies on the users table');
         console.log('   - Ensure the anon key has proper permissions');
         process.exit(1);
     }
@@ -183,17 +203,18 @@ async function main() {
 
     // Step 5: Test RPC Functions
     console.log('\n📋 Step 5: Testing RPC Functions');
-    await testRPCFunctions(supabase);
+    const rpcTest = await testRPCFunctions(supabase);
 
     // Summary
     console.log('\n━'.repeat(60));
     console.log('\n✨ Verification Summary:');
     console.log(`   ✅ Credentials: Valid`);
-    console.log(`   ✅ Database: Connected`);
+    console.log(`   ✅ Database: Connected (${REQUIRED_TABLES.length} required tables)`);
+    console.log(`   ${rpcTest ? '✅' : '❌'} RPC contract: ${rpcTest ? 'Available' : 'Unavailable'}`);
     console.log(`   ${storageTest.success ? '✅' : '⚠️ '} Storage: ${storageTest.found.length}/${REQUIRED_BUCKETS.length} buckets found`);
     console.log('\n━'.repeat(60));
 
-    if (storageTest.success) {
+    if (storageTest.success && rpcTest) {
         console.log('\n🎉 All checks passed! Your Supabase backend is ready.\n');
     } else {
         console.log('\n⚠️  Some issues detected. Please review the output above.\n');

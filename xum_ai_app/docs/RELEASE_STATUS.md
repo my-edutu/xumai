@@ -24,6 +24,7 @@ The configured Supabase project (`gkhemshbwmealgxczykk`) could not be reached du
 - Deploy and authenticated-test `request-withdrawal` with `RESEND_API_KEY`/`RESEND_FROM_EMAIL`, including expiry, retry lockout, and delivery rollback.
 - Configure the server-side OTP delivery provider, expiration, retry limits, and payout provider/webhooks.
 - Generate database types from the live schema and verify RLS with contributor, company, admin, and anonymous sessions.
+- Resolve and verify the identity contract: the canonical root schema uses UUID `users.id` values linked to `auth.users`, while Clerk user IDs are string identifiers; the Clerk-to-Supabase JWT/mapping strategy must be proven before authenticated flows can be certified.
 - Run end-to-end contributor, company, and admin journeys against seeded staging data.
 
 ## Product work still required

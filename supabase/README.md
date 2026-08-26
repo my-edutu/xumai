@@ -9,6 +9,8 @@
 3. Run the application backend verification command from `xum_ai_app`.
 4. Run the RLS matrix with anonymous, contributor, company, and admin sessions before promoting.
 
+Before applying this bootstrap, verify the identity contract. The SQL assumes UUID-backed Supabase Auth identities (`users.id REFERENCES auth.users(id)`), while the app uses Clerk IDs. Clerk's Supabase JWT template and the user synchronization/mapping strategy must be validated against staging; do not apply this schema to production until those identifiers are demonstrably compatible.
+
 The script must be run against a disposable staging project first. It is not evidence that the configured production project has the schema; the database connection and migration output must be retained with the release record.
 
 ## Release gates
