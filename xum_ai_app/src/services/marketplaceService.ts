@@ -1,4 +1,4 @@
-import { supabase } from '../supabaseClient';
+import { isSupabaseConfigured, supabase } from '../supabaseClient';
 import {
     FeaturedTask,
     AdminTask,
@@ -6,6 +6,9 @@ import {
 } from './types';
 import { Task } from '../types';
 import { getUserTaskStats } from './taskService';
+import { JudgeUnlockStats, normalizeJudgeUnlockStats } from './judgeUnlock';
+
+export { normalizeJudgeUnlockStats } from './judgeUnlock';
 
 // Helper to check Supabase config
 const ensureSupabase = (context: string) => {
@@ -121,32 +124,29 @@ export async function getActiveTasks(): Promise<Task[]> {
 /**
  * Check if user has completed enough tasks to unlock XUM Judge
  */
-export async function checkJudgeUnlock(userId: string): Promise<{ isUnlocked: boolean; completedTasks: number; requiredTasks: number }> {
+export async function checkJudgeUnlock(userId: string): Promise<JudgeUnlockStats> {
+    const lockedStats: JudgeUnlockStats = {
+        isUnlocked: false,
+        completedTasks: 0,
+        requiredTasks: 0,
+    };
+
+    if (!isSupabaseConfigured || !userId) return lockedStats;
+
     try {
-        // TODO: In the future, fetch `requiredTasks` from an admin `app_config` table
-        const requiredTasks = 10;
-        
-        const { count, error } = await supabase
-            .from('task_submissions')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', userId)
-            .eq('status', 'approved');
+        const { data, error } = await supabase.rpc('check_judge_unlock', {
+            p_user_id: userId,
+        });
 
         if (error) {
-            console.error('[JudgeUnlock] Error checking tasks:', error);
-            return { isUnlocked: false, completedTasks: 0, requiredTasks };
+            console.warn('[JudgeUnlock] RPC error:', error.message);
+            return lockedStats;
         }
 
-        const completedTasks = count || 0;
-        return {
-            isUnlocked: completedTasks >= requiredTasks,
-            completedTasks,
-            requiredTasks
-        };
+        return normalizeJudgeUnlockStats(data);
     } catch (err: any) {
-        console.error('[JudgeUnlock] check error:', err.message);
-        // Default to locked with 0 required tasks just as a fallback
-        return { isUnlocked: false, completedTasks: 0, requiredTasks: 10 };
+        console.warn('[JudgeUnlock] RPC request failed:', err?.message || 'Unknown error');
+        return lockedStats;
     }
 }
 

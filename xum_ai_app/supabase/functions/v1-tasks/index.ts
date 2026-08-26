@@ -72,24 +72,69 @@ serve(async (req) => {
             else if (taskId && action === 'pause') {
                 // Pause Task
                 const updateAuthResult = await authenticate(req, ['tasks:pause']);
-                if (!updateAuthResult.authorized) return new Response('Forbidden', { status: 403 });
+                if (!updateAuthResult.authorized) {
+                    await logApiRequest(authResult.key_id, path, 403, ip);
+                    return new Response(JSON.stringify({ error: updateAuthResult.error || 'Forbidden' }), {
+                        status: 403,
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                }
+
+                const { data: task, error } = await supabaseAdmin
+                    .from('tasks')
+                    .update({ status: 'paused' })
+                    .eq('id', taskId)
+                    .select('id, status')
+                    .single();
+
+                if (error || !task) {
+                    await logApiRequest(authResult.key_id, path, 404, ip);
+                    return new Response(JSON.stringify({ error: error?.message || 'Task not found.' }), {
+                        status: 404,
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                }
 
                 await logApiRequest(authResult.key_id, path, 200, ip);
-                return new Response(JSON.stringify({ success: true, message: `Task ${taskId} paused.` }), { headers: { 'Content-Type': 'application/json' } });
+                return new Response(JSON.stringify({ success: true, task }), { headers: { 'Content-Type': 'application/json' } });
             }
             else if (taskId && action === 'resume') {
                 // Resume Task
                 const updateAuthResult = await authenticate(req, ['tasks:update']);
-                if (!updateAuthResult.authorized) return new Response('Forbidden', { status: 403 });
+                if (!updateAuthResult.authorized) {
+                    await logApiRequest(authResult.key_id, path, 403, ip);
+                    return new Response(JSON.stringify({ error: updateAuthResult.error || 'Forbidden' }), {
+                        status: 403,
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                }
+
+                const { data: task, error } = await supabaseAdmin
+                    .from('tasks')
+                    .update({ status: 'active' })
+                    .eq('id', taskId)
+                    .select('id, status')
+                    .single();
+
+                if (error || !task) {
+                    await logApiRequest(authResult.key_id, path, 404, ip);
+                    return new Response(JSON.stringify({ error: error?.message || 'Task not found.' }), {
+                        status: 404,
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                }
 
                 await logApiRequest(authResult.key_id, path, 200, ip);
-                return new Response(JSON.stringify({ success: true, message: `Task ${taskId} resumed.` }), { headers: { 'Content-Type': 'application/json' } });
+                return new Response(JSON.stringify({ success: true, task }), { headers: { 'Content-Type': 'application/json' } });
             }
         }
 
-        return new Response(JSON.stringify({ error: 'Not Found / Bad Request' }), { status: 400 });
+        await logApiRequest(authResult.key_id, path, 404, ip);
+        return new Response(JSON.stringify({ error: 'Route not found.' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+        const message = error instanceof Error ? error.message : 'Internal server error.';
+        await logApiRequest('', path, 500, ip);
+        return new Response(JSON.stringify({ error: message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 });

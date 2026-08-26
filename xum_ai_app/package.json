@@ -20,7 +20,7 @@
     "prebuild:web": "tsx scripts/validate-web-env.ts",
     "preview:web": "npx serve dist-web -l 4173",
     "preview": "vite preview",
-    "test:unit": "node --import tsx --test tests/unit/fontSources.test.ts tests/unit/otp.test.ts",
+    "test:unit": "node --import tsx --test tests/unit/fontSources.test.ts tests/unit/judgeUnlock.test.ts tests/unit/otp.test.ts tests/unit/promptValidation.test.ts",
     "verify-backend": "tsx scripts/verify-supabase-config.ts",
     "generate-types": "npx supabase gen types typescript --project-id gkhemshbwmealgxczykk > src/types/supabase.ts"
   },

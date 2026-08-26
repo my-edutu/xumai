@@ -43,7 +43,10 @@ export const XumJudgeScreen: React.FC<XumJudgeScreenProps> = ({ onNavigate, sess
 
     const isLocked = !stats?.isUnlocked;
     const userCompletedTasks = stats?.completedTasks || 0;
-    const requiredTasks = stats?.requiredTasks || 10;
+    const requiredTasks = stats?.requiredTasks || 0;
+    const unlockProgress = requiredTasks > 0
+        ? Math.min(100, (userCompletedTasks / requiredTasks) * 100)
+        : 0;
 
     return (
         <View style={[styles.screenContainer, { backgroundColor: theme.background }]}>
@@ -66,7 +69,7 @@ export const XumJudgeScreen: React.FC<XumJudgeScreenProps> = ({ onNavigate, sess
                                 Complete more tasks to unlock XUM Judge.
                             </Text>
                             <View style={{ height: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 3, marginTop: 8 }}>
-                                <View style={{ height: 6, backgroundColor: theme.primary, borderRadius: 3, width: `${Math.min(100, (userCompletedTasks / requiredTasks) * 100)}%` }} />
+                                <View style={{ height: 6, backgroundColor: theme.primary, borderRadius: 3, width: `${unlockProgress}%` }} />
                             </View>
                             <Text style={{ color: theme.textSecondary, fontSize: 11, marginTop: 4 }}>{userCompletedTasks} tasks completed</Text>
                         </View>

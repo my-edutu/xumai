@@ -18,34 +18,34 @@ export interface PromptGenerationParams {
 import { supabase, isSupabaseConfigured } from '../supabaseClient';
 import { getSeedPrompts } from '../data/seedPrompts';
 import { TaskPrompt, TaskType } from './types';
+import { normalizePromptGenerationParams } from './promptValidation';
 
 /**
  * Service to manage AI Prompt Generation & Database Seeding
  */
 export const PromptService = {
 
-    /**
-     * Generate prompts based on parameters (Mock for now, but scalable)
-     */
+    /** Generate prompts through the authenticated server-side AI function. */
     generateAiPrompts: async (params: PromptGenerationParams): Promise<AiPrompt[]> => {
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const normalized = normalizePromptGenerationParams(params);
+        if (!normalized) throw new Error('Invalid prompt generation parameters.');
+        if (!isSupabaseConfigured) throw new Error('Prompt generation is unavailable until Supabase is configured.');
 
-        const prompts: AiPrompt[] = [];
-        const baseId = Date.now();
+        const { data, error } = await supabase.functions.invoke('generate-prompts', {
+            body: normalized,
+        });
 
-        for (let i = 0; i < params.count; i++) {
-            prompts.push({
-                id: `gen_${baseId}_${i}`,
-                text: generateMockPromptText(params.modality, params.context, i),
-                category: params.context || 'General',
-                type: params.modality,
-                difficulty: Math.floor(Math.random() * 3) + 1, // 1-3
-                isSelected: true
-            });
+        if (error) {
+            console.warn('[Prompts] Generation error:', error.message);
+            throw new Error(error.message);
         }
 
-        return prompts;
+        const prompts = data && typeof data === 'object' && Array.isArray(data.prompts)
+            ? data.prompts
+            : [];
+
+        if (prompts.length === 0) throw new Error('The prompt service returned no prompts.');
+        return prompts as AiPrompt[];
     },
 
     /**
@@ -53,8 +53,7 @@ export const PromptService = {
      */
     deployPrompts: async (prompts: AiPrompt[]): Promise<{ success: boolean; count: number }> => {
         if (!isSupabaseConfigured) {
-            console.warn("Supabase not configured, pretending to deploy.");
-            return { success: true, count: prompts.length };
+            throw new Error('Prompt deployment is unavailable until Supabase is configured.');
         }
 
         const dbRecords = prompts.map(p => ({
@@ -71,7 +70,7 @@ export const PromptService = {
         const { error } = await supabase.from('capture_prompts').insert(dbRecords);
 
         if (error) {
-            console.error("Deploy error:", error);
+            console.warn("Deploy error:", error.message);
             throw new Error(error.message);
         }
 
@@ -92,7 +91,7 @@ export const PromptService = {
         const { error } = await supabase.from('capture_prompts').insert(seeds);
 
         if (error) {
-            console.error("Seed error:", error);
+            console.warn("Seed error:", error.message);
             throw new Error(error.message);
         }
 
@@ -143,41 +142,3 @@ export const PromptService = {
         }
     }
 };
-
-
-// Helper to generate realistic-looking mock text
-function generateMockPromptText(modality: string, context: string, index: number): string {
-    const templates = {
-        voice: [
-            `Describe the impact of ${context} in your local dialect.`,
-            `Explain how ${context} works to a 5-year-old.`,
-            `Roleplay a conversation about ${context} with a friend.`,
-            `Pronounce the following terms related to ${context}.`,
-            `Tell a story about a time you experienced ${context}.`
-        ],
-        image: [
-            `Take a photo of ${context} in a busy environment.`,
-            `Capture a close-up detail of ${context}.`,
-            `Photograph ${context} under low-light conditions.`,
-            `Find an example of ${context} that looks old or worn.`,
-            `Show how ${context} is used in daily life.`
-        ],
-        video: [
-            `Record a tutorial on how to use ${context}.`,
-            `Show the movement or action of ${context}.`,
-            `Film a 360-degree view of ${context}.`,
-            `Document the process of fixing or maintaining ${context}.`,
-            `Capture the sound and visual of ${context} in operation.`
-        ],
-        text: [
-            `Write a short essay about the history of ${context}.`,
-            `List 5 slang terms used when talking about ${context}.`,
-            `Translate this paragraph about ${context} into Pidgin.`,
-            `Explain the cultural significance of ${context}.`,
-            `Write a review of ${context}.`
-        ]
-    };
-
-    const specificTemplates = templates[modality as keyof typeof templates] || templates.text;
-    return specificTemplates[index % specificTemplates.length];
-}

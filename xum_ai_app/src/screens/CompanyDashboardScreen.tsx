@@ -901,12 +901,20 @@ export const CompanyDashboardScreen: React.FC<CompanyDashboardScreenProps> = ({ 
                 Browse high-quality datasets or commission new data collection.
             </Text>
 
-            <View style={[styles.emptySection, { backgroundColor: theme.surface, borderColor: theme.border, paddingVertical: 80 }]}>
-                <MaterialIcons name="store" size={64} color={theme.primary} style={{ opacity: 0.5 }} />
-                <Text style={[styles.emptyTitle, { color: theme.text, fontSize: 20, marginTop: 16 }]}>Access Restricted</Text>
-                <Text style={[styles.emptyDesc, { color: theme.textSecondary, maxWidth: 300 }]}>
-                    The marketplace is currently under construction. Check back later for curated datasets and labeling services.
+            <View style={[styles.emptySection, { backgroundColor: theme.surface, borderColor: theme.border, paddingVertical: 48 }]}>
+                <MaterialIcons name="store" size={64} color={theme.primary} style={{ opacity: 0.8 }} />
+                <Text style={[styles.emptyTitle, { color: theme.text, fontSize: 20, marginTop: 16 }]}>Dataset Marketplace</Text>
+                <Text style={[styles.emptyDesc, { color: theme.textSecondary, maxWidth: 320 }]}>
+                    Browse licensed datasets, review quality metadata, and purchase access through the secure dataset store.
                 </Text>
+                <TouchableOpacity
+                    style={[styles.actionBtn, { backgroundColor: theme.primary, marginTop: 20, paddingHorizontal: 24 }]}
+                    onPress={() => onNavigate(ScreenName.DATA_SALES)}
+                    activeOpacity={0.85}
+                >
+                    <MaterialIcons name="open-in-new" size={16} color="#fff" />
+                    <Text style={[styles.actionBtnText, { color: '#fff', marginLeft: 8 }]}>Open Dataset Store</Text>
+                </TouchableOpacity>
             </View>
         </ScrollView>
     );
