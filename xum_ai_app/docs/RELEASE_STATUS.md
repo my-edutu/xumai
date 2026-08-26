@@ -13,6 +13,7 @@ Updated 2026-08-26.
 - API-key generation uses cryptographic random bytes, stores only a digest, scopes keys by company, and removes public read access from the documented SQL policies.
 - Client-side media checks are explicitly labeled as heuristics/unavailable; they cannot be treated as authoritative quality approval.
 - Prompt Genius no longer fabricates local AI output or deployment success; it requires the authenticated `generate-prompts` Edge Function and server-side `GEMINI_API_KEY`.
+- Withdrawal requests now enter through an authenticated `request-withdrawal` Edge Function; the database challenge RPC stores only a digest and rolls back escrow if email delivery fails.
 
 ## Blocked before production launch
 
@@ -20,6 +21,7 @@ The configured Supabase project (`gkhemshbwmealgxczykk`) could not be reached du
 
 - Apply and test the API-key policy migration and the `verify_withdrawal_otp` RPC.
 - Deploy and authenticated-test the `generate-prompts` Edge Function with a server-only Gemini key.
+- Deploy and authenticated-test `request-withdrawal` with `RESEND_API_KEY`/`RESEND_FROM_EMAIL`, including expiry, retry lockout, and delivery rollback.
 - Configure the server-side OTP delivery provider, expiration, retry limits, and payout provider/webhooks.
 - Generate database types from the live schema and verify RLS with contributor, company, admin, and anonymous sessions.
 - Run end-to-end contributor, company, and admin journeys against seeded staging data.

@@ -72,11 +72,12 @@ export async function requestWithdrawal(
 ): Promise<{ success: boolean; error?: string; id?: string }> {
     if (!ensureSupabase('Withdraw')) return { success: false, error: 'Supabase not configured' };
     try {
-        const { data, error } = await supabase.rpc('request_withdrawal', {
-            p_user_id: userId,
-            p_amount: amount,
-            p_method: method,
-            p_account_details: details,
+        const { data, error } = await supabase.functions.invoke('request-withdrawal', {
+            body: {
+                amount,
+                method,
+                details,
+            },
         });
 
         if (error) {
@@ -84,7 +85,7 @@ export async function requestWithdrawal(
             return { success: false, error: error.message };
         }
 
-        return { success: true, id: data };
+        return { success: true, id: data?.id };
     } catch (err: any) {
         console.warn('[Withdraw] Network error:', err.message);
         return { success: false, error: err.message || 'Withdrawal request failed' };
