@@ -7,6 +7,7 @@ import {
 import { Task } from '../types';
 import { getUserTaskStats } from './taskService';
 import { JudgeUnlockStats, normalizeJudgeUnlockStats } from './judgeUnlock';
+import { getTaskScreen } from '../navigation/taskRouting';
 
 export { normalizeJudgeUnlockStats } from './judgeUnlock';
 
@@ -265,15 +266,4 @@ function getTaskIcon(type: string): string {
 function getTaskColor(type: string): string {
     const map: Record<string, string> = { voice: '#ec4899', image: '#8b5cf6', video: '#10b981', text: '#3b82f6', validation: '#f59e0b' };
     return map[type] || '#64748b';
-}
-
-function getTaskScreen(type: string): string {
-    const map: Record<string, string> = {
-        voice: 'VOICE_TASK',
-        image: 'IMAGE_TASK',
-        video: 'VIDEO_TASK',
-        text: 'LINGUASENSE_ENGINE',
-        validation: 'VALIDATION_TASK_EXECUTION'
-    };
-    return map[type] || 'HOME';
 }

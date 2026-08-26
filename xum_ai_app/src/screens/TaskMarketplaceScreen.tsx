@@ -5,13 +5,14 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { ScreenName } from '../types';
 import * as TaskService from '../services/taskService';
-import { getFeaturedTasks, getDailyMissions } from '../services/marketplaceService';
+import { getFeaturedTasks, getDailyMissions, getFeedTasks } from '../services/marketplaceService';
+import { getTaskTypeFromIcon, normalizeScreen } from '../navigation/taskRouting';
 
 const appStyles: any = {}; // Temporary fix
 
 
 interface TaskMarketplaceProps {
-    onNavigate: (s: ScreenName) => void;
+    onNavigate: (s: ScreenName, params?: any) => void;
     onOpenContributorHub: () => void;
     onOpenNeuralInput: () => void;
     session: any;
@@ -21,49 +22,64 @@ interface TaskMarketplaceProps {
 export const TaskMarketplaceScreen = ({ onNavigate, onOpenContributorHub, onOpenNeuralInput, session, onBack }: TaskMarketplaceProps) => {
     const { theme } = useTheme();
     const [activeFilter, setActiveFilter] = useState('ALL');
+    const [searchQuery, setSearchQuery] = useState('');
     const [isFilterVisible, setIsFilterVisible] = useState(false);
     const [featuredTasks, setFeaturedTasks] = useState<any[]>([]);
     const [missions, setMissions] = useState<any[]>([]);
+    const [feedTasks, setFeedTasks] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const filters = ['ALL', 'AUDIO', 'TEXT', 'IMAGE'];
+    const filters = ['ALL', 'AUDIO', 'TEXT', 'IMAGE', 'VIDEO', 'VALIDATION'];
 
-    useEffect(() => {
-        const loadTasks = async () => {
-            if (!session?.user?.id) return;
-            setIsLoading(true);
-            try {
-                const [f, m] = await Promise.all([
-                    getFeaturedTasks(),
-                    getDailyMissions(session.user.id)
-                ]);
-                setFeaturedTasks(f.filter((task: any) => task.title !== 'Verify AI Translations'));
-                setMissions(m);
-            } catch (err) {
-                console.error("Error loading marketplace tasks:", err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        loadTasks();
-    }, [session?.user?.id]);
+    const getFeedCategory = (filter: string): string => {
+        if (filter === 'ALL') return 'All';
+        if (filter === 'AUDIO') return 'Voice';
+        return filter.charAt(0) + filter.slice(1).toLowerCase();
+    };
 
-    const onRefresh = React.useCallback(async () => {
+    const loadTasks = async (showRefreshState = false) => {
         if (!session?.user?.id) return;
-        setRefreshing(true);
+        if (showRefreshState) setRefreshing(true);
+        else setIsLoading(true);
+
         try {
-            const [f, m] = await Promise.all([
+            const [f, m, feed] = await Promise.all([
                 getFeaturedTasks(),
-                getDailyMissions(session.user.id)
+                getDailyMissions(session.user.id),
+                getFeedTasks(getFeedCategory(activeFilter)),
             ]);
             setFeaturedTasks(f.filter((task: any) => task.title !== 'Verify AI Translations'));
             setMissions(m);
+            setFeedTasks(feed);
         } catch (err) {
-            console.error("Error refreshing marketplace tasks:", err);
+            console.warn('[TaskMarketplace] Failed to load tasks:', err);
+            setFeaturedTasks([]);
+            setMissions([]);
+            setFeedTasks([]);
         } finally {
+            setIsLoading(false);
             setRefreshing(false);
         }
-    }, [session?.user?.id]);
+    };
+
+    useEffect(() => {
+        loadTasks();
+    }, [session?.user?.id, activeFilter]);
+
+    const onRefresh = React.useCallback(async () => {
+        await loadTasks(true);
+    }, [session?.user?.id, activeFilter]);
+
+    const visibleFeedTasks = feedTasks.filter((task) => {
+        const haystack = `${task.title || ''} ${task.subtitle || ''}`.toLowerCase();
+        return haystack.includes(searchQuery.trim().toLowerCase());
+    });
+
+    const visibleMissions = missions.filter((mission) => {
+        if (activeFilter === 'ALL') return true;
+        const taskType = mission.task_type || getTaskTypeFromIcon(mission.icon_name);
+        return normalizeScreen(mission.target_screen, taskType) === normalizeScreen(undefined, getFeedCategory(activeFilter));
+    });
 
     return (
         <View style={[styles.screenContainer, { backgroundColor: theme.background }]}>
@@ -73,7 +89,7 @@ export const TaskMarketplaceScreen = ({ onNavigate, onOpenContributorHub, onOpen
                     <MaterialIcons name="arrow-back" size={24} color={theme.textSecondary} />
                 </TouchableOpacity>
                 <Text style={[styles.headerTitle, { color: theme.text }]}>TASK</Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={onRefresh} accessibilityRole="button" accessibilityLabel="Refresh tasks">
                     <MaterialIcons name="refresh" size={24} color={theme.textSecondary} />
                 </TouchableOpacity>
             </View>
@@ -97,6 +113,8 @@ export const TaskMarketplaceScreen = ({ onNavigate, onOpenContributorHub, onOpen
                         style={[taskStyles.searchInput, { color: theme.text }]}
                         placeholder="Search"
                         placeholderTextColor={theme.textSecondary}
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
                     />
                     <TouchableOpacity onPress={() => setIsFilterVisible(true)} style={{ padding: 4 }}>
                         <MaterialIcons name="tune" size={20} color={theme.primary} />
@@ -158,22 +176,10 @@ export const TaskMarketplaceScreen = ({ onNavigate, onOpenContributorHub, onOpen
                         contentContainerStyle={[taskStyles.featuredRow, { paddingLeft: 16, paddingRight: 32 }]}
                     >
                         {featuredTasks.map((task) => {
-                            const targetScreen = task.target_screen as ScreenName;
-
-                            // Fallback logic if target_screen is missing (though DB should have it)
-                            const getFallbackScreen = (iconName: string) => {
-                                if (iconName === 'mic' || iconName === 'record-voice-over') return ScreenName.VOICE_TASK;
-                                if (iconName === 'camera-alt' || iconName === 'photo-camera') return ScreenName.IMAGE_TASK;
-                                if (iconName === 'videocam' || iconName === 'video-camera-back') return ScreenName.VIDEO_TASK;
-                                return ScreenName.VOICE_TASK;
-                            };
-
                             const handlePress = () => {
-                                if (targetScreen && Object.values(ScreenName).includes(targetScreen)) {
-                                    onNavigate(targetScreen);
-                                } else {
-                                    onNavigate(getFallbackScreen(task.icon_name));
-                                }
+                                const taskType = getTaskTypeFromIcon(task.icon_name);
+                                const targetScreen = normalizeScreen(task.target_screen, taskType);
+                                onNavigate(targetScreen);
                             };
 
                             return (
@@ -191,7 +197,34 @@ export const TaskMarketplaceScreen = ({ onNavigate, onOpenContributorHub, onOpen
                     </ScrollView>
                 )}
 
-
+                {/* Active task feed */}
+                <Text style={[styles.sectionTitle, { paddingHorizontal: 16, marginTop: 24, marginBottom: 16, color: theme.text }]}>ACTIVE TASKS</Text>
+                <View style={{ paddingHorizontal: 16 }}>
+                    {isLoading && feedTasks.length === 0 ? (
+                        <ActivityIndicator color={theme.primary} style={{ marginTop: 20 }} />
+                    ) : visibleFeedTasks.length > 0 ? (
+                        visibleFeedTasks.map((task) => (
+                            <TouchableOpacity
+                                key={`${task.isCampaign ? 'campaign' : 'task'}-${task.id}`}
+                                onPress={() => onNavigate(normalizeScreen(task.screen, task.type), task.campaignId ? { campaignId: task.campaignId } : undefined)}
+                                style={[styles.missionCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                                accessibilityRole="button"
+                                accessibilityLabel={`Open ${task.title}`}
+                            >
+                                <View style={[styles.missionIconBox, { backgroundColor: `${task.color || theme.primary}20` }]}>
+                                    <MaterialIcons name={(task.icon || 'assignment') as any} size={18} color={task.color || theme.primary} />
+                                </View>
+                                <View style={styles.missionInfo}>
+                                    <Text style={[styles.missionTitle, { color: theme.text }]}>{task.title}</Text>
+                                    <Text style={[styles.missionTime, { color: theme.textSecondary }]} numberOfLines={1}>{task.subtitle}</Text>
+                                </View>
+                                <Text style={[styles.missionReward, { color: theme.success }]}>${Number(task.reward || 0).toFixed(2)}</Text>
+                            </TouchableOpacity>
+                        ))
+                    ) : (
+                        <Text style={{ color: theme.textSecondary, textAlign: 'center', marginTop: 20 }}>No active tasks available.</Text>
+                    )}
+                </View>
 
                 {/* Available Missions */}
                 <Text style={[styles.sectionTitle, { paddingHorizontal: 16, marginTop: 24, marginBottom: 16, color: theme.text }]}>
@@ -200,9 +233,9 @@ export const TaskMarketplaceScreen = ({ onNavigate, onOpenContributorHub, onOpen
                 <View style={{ paddingHorizontal: 16, paddingBottom: 40 }}>
                     {isLoading && missions.length === 0 ? (
                         <ActivityIndicator color={theme.primary} style={{ marginTop: 20 }} />
-                    ) : missions.length > 0 ? (
-                        missions.map((mission) => (
-                            <TouchableOpacity key={mission.id} onPress={() => onNavigate(mission.target_screen || ScreenName.TASK_DETAILS)} style={[styles.missionCard, { backgroundColor: theme.surface, borderColor: theme.border, opacity: mission.is_locked_for_new_users ? 0.6 : 1 }]} disabled={mission.is_locked_for_new_users}>
+                    ) : visibleMissions.length > 0 ? (
+                        visibleMissions.map((mission) => (
+                            <TouchableOpacity key={mission.id} onPress={() => onNavigate(normalizeScreen(mission.target_screen, mission.task_type || getTaskTypeFromIcon(mission.icon_name)))} style={[styles.missionCard, { backgroundColor: theme.surface, borderColor: theme.border, opacity: mission.is_locked_for_new_users ? 0.6 : 1 }]} disabled={mission.is_locked_for_new_users}>
                                 <View style={[styles.missionIconBox, { backgroundColor: `${mission.icon_color || theme.primary}20` }]}>
                                     <MaterialIcons name={(mission.icon_name || 'assignment') as any} size={18} color={mission.icon_color || theme.primary} />
                                 </View>

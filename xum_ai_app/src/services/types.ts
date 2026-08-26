@@ -68,6 +68,7 @@ export interface FeaturedTask {
 export interface AdminTask {
     id: string;
     category: 'daily_mission' | 'xum_judge';
+    task_type?: string;
     title: string;
     subtitle?: string;
     description?: string;

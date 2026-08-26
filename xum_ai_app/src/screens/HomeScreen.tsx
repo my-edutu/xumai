@@ -14,6 +14,7 @@ import { EmptyStateCard } from '../components/EmptyStateCard';
 import { Avatar, Badge, Card } from '../components/primitives';
 import { SPACING, TYPOGRAPHY, LAYOUT, SHADOWS, TEXT_STYLES } from '../constants/designTokens';
 import { rgba } from '../utils/styleUtils';
+import { getTaskTypeFromIcon, normalizeScreen } from '../navigation/taskRouting';
 
 interface HomeProps {
     onNavigate: (s: ScreenName, params?: any) => void;
@@ -253,7 +254,7 @@ export const HomeScreen = ({
                                 <TouchableOpacity
                                     key={task.id}
                                     style={[styles.featuredPromoCardSmall, { backgroundColor: theme.surface, marginRight: SPACING.md }]}
-                                    onPress={() => onNavigate(task.target_screen as ScreenName)}
+                                    onPress={() => onNavigate(normalizeScreen(task.target_screen, getTaskTypeFromIcon(task.icon_name)))}
                                 >
                                     <LinearGradient
                                         colors={[task.gradient_start || theme.primary, task.gradient_end || theme.primaryDark]}

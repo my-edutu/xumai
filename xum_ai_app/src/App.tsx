@@ -112,6 +112,7 @@ import { NeuralInputModal } from './components/NeuralInputModal';
 import { SPACING, TYPOGRAPHY, LAYOUT, SHADOWS } from './constants/designTokens';
 import { ClerkProvider } from './context/ClerkProvider';
 import { useUser, useClerk } from '@clerk/clerk-expo';
+import { normalizeScreen } from './navigation/taskRouting';
 
 // Legacy support - will be replaced by context
 let colors: ThemeColors = themePresets.midnight;
@@ -256,14 +257,16 @@ function App() {
   }, []);
 
   const navigate = (screen: ScreenName, params?: any) => {
+    const resolvedScreen = normalizeScreen(screen, params?.taskType || params?.task_type);
+
     // Prevent pushing duplicate screens or pushing HOME
-    if (screen === ScreenName.HOME || screen === ScreenName.COMPANY_DASHBOARD) {
+    if (resolvedScreen === ScreenName.HOME || resolvedScreen === ScreenName.COMPANY_DASHBOARD) {
       setHistory([]);
-    } else if (currentScreen !== screen && currentScreen !== ScreenName.SPLASH && currentScreen !== ScreenName.ONBOARDING) {
+    } else if (currentScreen !== resolvedScreen && currentScreen !== ScreenName.SPLASH && currentScreen !== ScreenName.ONBOARDING) {
       setHistory(prev => [...prev, currentScreen]);
     }
 
-    setCurrentScreen(screen);
+    setCurrentScreen(resolvedScreen);
     setNavigationParams(params || null);
     setIsNeuralInputVisible(false);
     setIsContributorHubVisible(false);
