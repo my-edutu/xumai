@@ -14,6 +14,7 @@ Updated 2026-08-26.
 - Client-side media checks are explicitly labeled as heuristics/unavailable; they cannot be treated as authoritative quality approval.
 - Prompt Genius no longer fabricates local AI output or deployment success; it requires the authenticated `generate-prompts` Edge Function and server-side `GEMINI_API_KEY`.
 - Withdrawal requests now enter through an authenticated `request-withdrawal` Edge Function; the database challenge RPC stores only a digest and rolls back escrow if email delivery fails.
+- Clerk now supplies Supabase access tokens through the supported native third-party-auth client integration; the deprecated `supabase` JWT-template/session bridge and browser-side user upsert have been removed.
 
 ## Blocked before production launch
 
@@ -24,7 +25,7 @@ The configured Supabase project (`gkhemshbwmealgxczykk`) could not be reached du
 - Deploy and authenticated-test `request-withdrawal` with `RESEND_API_KEY`/`RESEND_FROM_EMAIL`, including expiry, retry lockout, and delivery rollback.
 - Configure the server-side OTP delivery provider, expiration, retry limits, and payout provider/webhooks.
 - Generate database types from the live schema and verify RLS with contributor, company, admin, and anonymous sessions.
-- Resolve and verify the identity contract: the canonical root schema uses UUID `users.id` values linked to `auth.users`, while Clerk user IDs are string identifiers; the Clerk-to-Supabase JWT/mapping strategy must be proven before authenticated flows can be certified.
+- Deploy and verify the identity migration: the canonical root schema still uses UUID `users.id` values linked to `auth.users`, while native Clerk tokens expose string `sub` identifiers. Trusted Clerk webhook provisioning plus a text-ID/mapping-compatible schema and RLS policy set must be deployed before authenticated flows can be certified.
 - Run end-to-end contributor, company, and admin journeys against seeded staging data.
 
 ## Product work still required

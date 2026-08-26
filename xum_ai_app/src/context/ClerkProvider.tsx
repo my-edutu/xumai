@@ -27,8 +27,7 @@ const tokenCache = {
         }
     },
 };
-import { supabase, isSupabaseConfigured } from '../supabaseClient';
-import { applyPendingReferral } from '../services/referralService';
+import { isSupabaseConfigured, setSupabaseAccessTokenProvider } from '../supabaseClient';
 
 // Get the publishable key from environment
 const getClerkPublishableKey = (): string => {
@@ -56,53 +55,31 @@ const getClerkPublishableKey = (): string => {
 const publishableKey = getClerkPublishableKey();
 
 /**
- * Component to sync Clerk auth state with Supabase session
- * This injects the Clerk JWT into Supabase for RLS verification
+ * Connect Clerk's native session token to Supabase.
+ * Supabase's native Clerk integration accepts Clerk's session token directly;
+ * the deprecated JWT-template/session bridge must not be used here.
  */
 const ClerkSupabaseSession: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { getToken, isLoaded: isAuthLoaded, userId } = useAuth();
+    const { getToken, isLoaded: isAuthLoaded } = useAuth();
 
     useEffect(() => {
         if (!isAuthLoaded || !isSupabaseConfigured) return;
 
-        const syncSession = async () => {
-            try {
-                if (userId) {
-                    // 1. Get token from Clerk using the 'supabase' template
-                    // Note: You must create this template in Clerk Dashboard > JWT Templates
-                    const token = await getToken({ template: 'supabase' });
-                    
-                    if (token) {
-                        const { error } = await supabase.auth.setSession({
-                            access_token: token,
-                            refresh_token: '', // Clerk handles token refreshing
-                        });
-                        
-                        if (error) {
-                            console.warn('[ClerkSession] Supabase session error:', error.message);
-                        } else {
-                            console.log('[ClerkSession] Supabase session active for:', userId);
-                        }
-                    }
-                } else {
-                    // 2. No user - clear Supabase session
-                    await supabase.auth.signOut();
-                    console.log('[ClerkSession] Supabase session cleared');
-                }
-            } catch (err: any) {
-                console.warn('[ClerkSession] Session sync failed:', err.message);
-            }
-        };
-
-        syncSession();
-    }, [userId, isAuthLoaded]);
+        setSupabaseAccessTokenProvider(async () => getToken() ?? null);
+        return () => setSupabaseAccessTokenProvider(null);
+    }, [getToken, isAuthLoaded]);
 
     return <>{children}</>;
 };
 
 /**
- * Component to sync Clerk user to Supabase
- * This ensures the user exists in Supabase's users table
+ * User provisioning belongs to a trusted Clerk webhook.
+ *
+ * The current SQL bootstrap still models public.users.id as a Supabase Auth
+ * UUID, while native Clerk tokens expose a string sub claim. A browser-side
+ * upsert would therefore fail and could make the UI report a false-ready
+ * account. Keep this diagnostic until the canonical identity migration is
+ * deployed and verified against the production database.
  */
 const ClerkSupabaseSync: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, isLoaded } = useUser();
@@ -114,54 +91,10 @@ const ClerkSupabaseSync: React.FC<{ children: React.ReactNode }> = ({ children }
             return;
         }
 
-        const syncUserToSupabase = async () => {
-            try {
-                const email = user.primaryEmailAddress?.emailAddress || '';
-                const userData = {
-                    id: user.id,
-                    email,
-                    full_name: user.fullName || user.firstName || 'Contributor',
-                    avatar_url: user.imageUrl || null,
-                    updated_at: new Date().toISOString(),
-                };
-
-                // Check if user already exists by email (handles Clerk ID changes)
-                const { data: existing } = await supabase
-                    .from('users')
-                    .select('id')
-                    .eq('email', email)
-                    .maybeSingle();
-
-                if (existing && existing.id !== user.id) {
-                    // Update existing record's Clerk ID and other fields
-                    const { error } = await supabase
-                        .from('users')
-                        .update({ ...userData, id: user.id })
-                        .eq('email', email);
-                    if (error) {
-                        console.warn('[ClerkSync] Error updating existing user:', error.message);
-                    } else {
-                        console.log('[ClerkSync] Updated existing user with new Clerk ID:', user.id);
-                    }
-                } else {
-                    // Upsert normally by ID
-                    const { error } = await supabase.from('users').upsert(userData, { onConflict: 'id' });
-                    if (error) {
-                        console.warn('[ClerkSync] Error syncing user to Supabase:', error.message);
-                    } else {
-                        console.log('[ClerkSync] User synced to Supabase:', user.id);
-                    }
-                }
-
-                // Record any pending referral now that the user row exists.
-                // Idempotent + best-effort: the RPC no-ops if already referred.
-                await applyPendingReferral(user.id);
-            } catch (err: any) {
-                console.warn('[ClerkSync] Network error:', err.message);
-            }
-        };
-
-        syncUserToSupabase();
+        console.warn(
+            '[ClerkSync] Account provisioning is waiting for the deployed Clerk identity migration. '
+            + `Clerk user ${user.id} must map to the canonical database identity before data writes are enabled.`
+        );
     }, [user, isLoaded]);
 
     return <>{children}</>;

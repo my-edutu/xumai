@@ -14,7 +14,6 @@ import { TaskService } from '../services/taskService';
 import { TaskPrompt, TaskType, TaskSubmission } from '../services/types';
 import { PromptService } from '../services/promptService';
 import { QualityService } from '../services/qualityService';
-import { supabase } from '../supabaseClient';
 
 // ============================================================================
 // TYPES
@@ -76,27 +75,12 @@ export function useTask({ taskType, tasksPerSession = 5, initialUserId, campaign
 
     // If Clerk user ID was provided directly, skip Supabase auth lookup
     useEffect(() => {
-        if (initialUserId) {
-            // Already set via useState initializer — nothing to do
-            return;
-        }
-        const getUser = async () => {
-            try {
-                const { data, error } = await supabase.auth.getSession();
-                if (!error && data.session?.user) {
-                    setUserId(data.session.user.id);
-                } else if (!data.session?.user) {
-                    console.log('[useTask] No active session found');
-                    setError('Please sign in to view tasks');
-                    setIsLoading(false);
-                }
-            } catch (err) {
-                console.error('[useTask] Auth error:', err);
-                setError('Authentication failed');
-                setIsLoading(false);
-            }
-        };
-        getUser();
+        if (initialUserId) return;
+
+        // Clerk is the identity provider. Native third-party auth does not
+        // create a Supabase Auth session to query here.
+        setError('Please sign in to view tasks');
+        setIsLoading(false);
     }, [initialUserId]);
 
     // Load prompts when user ID is available

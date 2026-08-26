@@ -46,6 +46,16 @@ const isValidKey = (key: string): boolean => {
 const supabaseUrl = getSupabaseUrl();
 const supabaseAnonKey = getSupabaseAnonKey();
 
+// Native Clerk/Supabase integration supplies Clerk's session token directly.
+// The provider is registered by ClerkProvider after Clerk has loaded.
+let clerkAccessTokenProvider: (() => Promise<string | null>) | null = null;
+
+export function setSupabaseAccessTokenProvider(
+  provider: (() => Promise<string | null>) | null
+): void {
+  clerkAccessTokenProvider = provider;
+}
+
 const hasValidCredentials = isValidUrl(supabaseUrl) && isValidKey(supabaseAnonKey);
 
 if (!hasValidCredentials) {
@@ -57,6 +67,7 @@ if (!hasValidCredentials) {
 // ============================================================================
 
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  accessToken: async () => clerkAccessTokenProvider?.() ?? null,
   auth: {
     storage: Platform.OS !== 'web' ? AsyncStorage : undefined,
     autoRefreshToken: true,

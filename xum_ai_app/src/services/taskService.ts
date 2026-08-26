@@ -200,9 +200,10 @@ export async function submitPayload(
     try {
         console.log(`[SubmitPayload] Processing ${slug}`, payload);
 
-        // Mock userId for now or get from auth context if possible
-        // In a real app, userId should be passed in or retrieved from session
-        const userId = (await supabase.auth.getUser()).data.user?.id;
+        // Clerk is the identity provider. Legacy callers must pass the Clerk
+        // ID explicitly; querying supabase.auth is invalid with native
+        // third-party auth.
+        const userId = typeof payload.userId === 'string' ? payload.userId : null;
         if (!userId) throw new Error("User not authenticated");
 
         let fileUrl = payload.uri; // Default to local URI if upload fails
