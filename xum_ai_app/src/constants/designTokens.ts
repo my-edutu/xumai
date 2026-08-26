@@ -64,6 +64,8 @@ export const TYPOGRAPHY = {
     // Font Families (Inter system)
     fonts: {
         regular: 'Inter',
+        body: 'Inter',
+        display: 'InterBold',
         medium: 'InterMedium',
         semibold: 'InterSemiBold',
         bold: 'InterBold',
@@ -77,6 +79,7 @@ export const TYPOGRAPHY = {
         lg: 20,     // H3
         xl: 24,     // H2
         xxl: 32,    // H1
+        display: 32,
     },
 
     // Line Heights (Inter-optimized)

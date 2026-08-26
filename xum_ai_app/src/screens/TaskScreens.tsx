@@ -15,7 +15,7 @@ import { useTheme } from '../context/ThemeContext';
 import { TYPOGRAPHY, SPACING, LAYOUT, TEXT_STYLES } from '../constants/designTokens';
 
 interface ScreenProps {
-  onNavigate: (screen: ScreenName) => void;
+  onNavigate: (screen: ScreenName, params?: any) => void;
   onCompleteTask?: (reward: number, xp: number) => void;
   session?: { user: { id: string; email?: string; full_name?: string } | null };
 }
@@ -744,6 +744,7 @@ export const MediaCaptureScreen: React.FC<any> = ({ onNavigate, onCompleteTask, 
 };
 
 export const CaptureAudioScreen: React.FC<any> = ({ onNavigate, onCompleteTask, route }) => {
+  const { theme } = useTheme();
   const { promptText, context } = route?.params || {};
   const [isRecording, setIsRecording] = useState(false);
   const [isCustomEntry, setIsCustomEntry] = useState(false);
@@ -877,6 +878,8 @@ export const CaptureAudioScreen: React.FC<any> = ({ onNavigate, onCompleteTask, 
       </View>
     );
   }
+
+  if (!permissionResponse) return null;
 
   if (!permissionResponse.granted && !permissionResponse.canAskAgain) {
     return (

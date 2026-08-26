@@ -4,6 +4,7 @@
 -- 1) Create API Keys Table
 CREATE TABLE public.api_keys (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     key_id TEXT UNIQUE NOT NULL, -- e.g. xum_live_9f82...
     secret_hash TEXT NOT NULL, -- hashed secret for authentication
     name TEXT NOT NULL, -- Client name or identifier
@@ -18,9 +19,16 @@ CREATE TABLE public.api_keys (
 -- Enable RLS for API Keys
 ALTER TABLE public.api_keys ENABLE ROW LEVEL SECURITY;
 
--- Admins can read all keys. (Assuming an 'admin' role or a specific user criteria exists.
--- Using a generic true policy for demonstration, but IN PRODUCTION restrict this!)
-CREATE POLICY "Enable read access for internal services and admins" ON public.api_keys FOR SELECT USING (true);
+CREATE POLICY "Companies can read their own API keys" ON public.api_keys
+    FOR SELECT USING (
+        company_id = auth.uid()::text
+        OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+    );
+CREATE POLICY "Companies can create their own API keys" ON public.api_keys
+    FOR INSERT WITH CHECK (company_id = auth.uid()::text);
+CREATE POLICY "Companies can revoke their own API keys" ON public.api_keys
+    FOR UPDATE USING (company_id = auth.uid()::text)
+    WITH CHECK (company_id = auth.uid()::text);
 
 -- 2) Create API Key Scopes Table
 -- Scopes define what an API key is authorized to do (e.g., tasks:create, submissions:read)
@@ -35,7 +43,18 @@ CREATE TABLE public.api_key_scopes (
 -- Enable RLS for API Key Scopes
 ALTER TABLE public.api_key_scopes ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Enable read access for scopes" ON public.api_key_scopes FOR SELECT USING (true);
+CREATE POLICY "Owners can read their API key scopes" ON public.api_key_scopes
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.api_keys k
+            WHERE k.key_id = api_key_scopes.key_id
+              AND (k.company_id = auth.uid()::text OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+        )
+    );
+CREATE POLICY "Owners can create their API key scopes" ON public.api_key_scopes
+    FOR INSERT WITH CHECK (
+        EXISTS (SELECT 1 FROM public.api_keys k WHERE k.key_id = api_key_scopes.key_id AND k.company_id = auth.uid()::text)
+    );
 
 -- 3) Create API Logs Table
 -- For auditing: tracks every API request made using a key
@@ -53,9 +72,8 @@ CREATE TABLE public.api_logs (
 -- Enable RLS for API Logs
 ALTER TABLE public.api_logs ENABLE ROW LEVEL SECURITY;
 
--- Typically, logs are insert-only for the application, and read-only for admins
-CREATE POLICY "Enable insert access for all" ON public.api_logs FOR INSERT WITH CHECK (true);
-CREATE POLICY "Enable select access for admins" ON public.api_logs FOR SELECT USING (true);
+-- Logs are written by service-role Edge Functions and visible only to admins.
+CREATE POLICY "Admins can read API logs" ON public.api_logs FOR SELECT USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
 
 -- Create index for faster lookups on key_id to check validity

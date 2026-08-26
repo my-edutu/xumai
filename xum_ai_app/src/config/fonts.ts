@@ -6,15 +6,17 @@
  */
 
 import { useFonts } from 'expo-font';
+import { Platform } from 'react-native';
+
+import { getAppFontMap } from './fontSources';
 
 export function useAppFonts() {
-    const [fontsLoaded] = useFonts({
-        'Inter': require('../../assets/fonts/Inter_24pt-Regular.ttf'),
-        'InterMedium': require('../../assets/fonts/Inter_24pt-Medium.ttf'),
-        'InterSemiBold': require('../../assets/fonts/Inter_24pt-SemiBold.ttf'),
-        'InterBold': require('../../assets/fonts/Inter_24pt-Bold.ttf'),
-    });
-    return fontsLoaded;
+    const platform = Platform.OS === 'web' ? 'web' : 'native';
+    const [fontsLoaded] = useFonts(getAppFontMap(platform));
+
+    // The web shell loads Inter through CSS; do not wait for native TTF
+    // resolution in a browser where CommonJS asset loading is unavailable.
+    return platform === 'web' || fontsLoaded;
 }
 
 export const FONT_FAMILIES = {

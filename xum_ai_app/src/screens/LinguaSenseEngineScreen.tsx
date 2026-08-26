@@ -21,7 +21,7 @@ export const LinguaSenseEngineScreen = ({ onNavigate }: LinguaSenseProps) => {
             title: 'Semantic Text',
             description: 'Provide written names, meanings, and context for grounded items.',
             icon: 'edit',
-            colors: ['#3b82f6', '#2563eb'],
+            colors: ['#3b82f6', '#2563eb'] as [string, string],
             screen: ScreenName.LINGUASENSE
         },
         {
@@ -29,7 +29,7 @@ export const LinguaSenseEngineScreen = ({ onNavigate }: LinguaSenseProps) => {
             title: 'Neural Voice',
             description: 'Record natural spoken pronunciations and tonal descriptions.',
             icon: 'mic',
-            colors: ['#ec4899', '#db2777'],
+            colors: ['#ec4899', '#db2777'] as [string, string],
             screen: ScreenName.VOICE_TASK
         },
         {
@@ -37,7 +37,7 @@ export const LinguaSenseEngineScreen = ({ onNavigate }: LinguaSenseProps) => {
             title: 'Full Multimodal',
             description: 'Maximum reward: Build the ultimate grounded dataset with text and voice.',
             icon: 'record-voice-over',
-            colors: ['#8b5cf6', '#7c3aed'],
+            colors: ['#8b5cf6', '#7c3aed'] as [string, string],
             screen: ScreenName.LINGUASENSE
         }
     ];

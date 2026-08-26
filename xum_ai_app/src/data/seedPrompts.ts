@@ -4,7 +4,7 @@
  * Generates initial mock prompts for the Data Engine.
  */
 
-import { TaskPrompt } from '../services/taskService';
+import { TaskPrompt } from '../services/types';
 
 const MOCK_PROMPTS = {
     voice: [

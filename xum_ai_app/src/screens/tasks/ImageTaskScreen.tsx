@@ -222,7 +222,7 @@ export const ImageTaskScreen: React.FC<ImageTaskScreenProps> = ({ onNavigate, se
                             <Image source={{ uri: capturedUri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                             <TouchableOpacity
                                 onPress={() => setCapturedUri(null)}
-                                style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20, p: 4 }}
+                                style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: 4 }}
                             >
                                 <MaterialIcons name="close" size={20} color="#fff" />
                             </TouchableOpacity>

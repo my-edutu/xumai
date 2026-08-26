@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, ActivityIndicator, RefreshControl, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, ActivityIndicator, RefreshControl, Platform, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -226,7 +226,7 @@ export const TaskMarketplaceScreen = ({ onNavigate, onOpenContributorHub, onOpen
 };
 
 // Styles
-const styles = {
+const styles = StyleSheet.create({
     screenContainer: {
         flex: 1,
     },
@@ -288,9 +288,9 @@ const styles = {
         fontSize: 14,
         fontWeight: '900' as '900',
     },
-};
+});
 
-const taskStyles = {
+const taskStyles = StyleSheet.create({
     searchContainer: {
         flexDirection: 'row' as 'row',
         alignItems: 'center',
@@ -420,4 +420,4 @@ const taskStyles = {
         borderWidth: 2,
         borderColor: 'rgba(255,255,255,0.25)',
     },
-};
+});

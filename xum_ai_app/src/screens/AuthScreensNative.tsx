@@ -861,7 +861,7 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
      * Handles all Clerk scenarios: direct session, transfer flows, and edge cases.
      */
     const completeOAuthFlow = async (
-        result: { createdSessionId: any; setActive: any; signIn: any; signUp: any },
+        result: { createdSessionId?: any; setActive?: any; signIn?: any; signUp?: any },
         provider: string,
     ) => {
         const { createdSessionId, setActive, signIn: oauthSignIn, signUp: oauthSignUp } = result;
@@ -1381,7 +1381,7 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                                 {mode === 'SignUp' && (
                                     <>
                                         <TouchableOpacity
-                                            style={[authStyles.inputFull, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, justifyContent: 'center', marginBottom: 16 }]}
+                                            style={[authStyles.inputFull, { backgroundColor: '#1A1A24', borderColor: theme.border, justifyContent: 'center', marginBottom: 16 }]}
                                             onPress={() => setIsCountryModalVisible(true)}
                                         >
                                             <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 }}>

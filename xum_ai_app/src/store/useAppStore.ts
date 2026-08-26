@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ThemeId } from '../types';
+import { ThemeId } from '../context/ThemeContext';
 
 interface AppState {
     // Session / User Level State

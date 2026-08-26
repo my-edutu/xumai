@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient';
 import { Transaction, LeaderboardEntry } from './types';
+import { isValidOtp } from './otp';
 
 // Helper to check Supabase config without duplicating the whole guard
 const ensureSupabase = (context: string) => {
@@ -87,6 +88,37 @@ export async function requestWithdrawal(
     } catch (err: any) {
         console.warn('[Withdraw] Network error:', err.message);
         return { success: false, error: err.message || 'Withdrawal request failed' };
+    }
+}
+
+/**
+ * Verify a withdrawal challenge on the server.
+ * The client never accepts a locally generated or hard-coded OTP.
+ */
+export async function verifyWithdrawalOtp(
+    userId: string,
+    withdrawalId: string,
+    otp: string
+): Promise<{ success: boolean; error?: string }> {
+    if (!ensureSupabase('WithdrawOTP')) return { success: false, error: 'Supabase not configured' };
+    if (!isValidOtp(otp)) return { success: false, error: 'Enter the six-digit verification code.' };
+
+    try {
+        const { error } = await supabase.rpc('verify_withdrawal_otp', {
+            p_user_id: userId,
+            p_withdrawal_id: withdrawalId,
+            p_otp: otp,
+        });
+
+        if (error) {
+            console.warn('[WithdrawOTP] RPC error:', error.message);
+            return { success: false, error: error.message };
+        }
+
+        return { success: true };
+    } catch (err: any) {
+        console.warn('[WithdrawOTP] Network error:', err.message);
+        return { success: false, error: err.message || 'Verification failed' };
     }
 }
 

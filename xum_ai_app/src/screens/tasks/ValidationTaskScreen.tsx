@@ -70,7 +70,7 @@ export const ValidationTaskScreen: React.FC<ValidationTaskScreenProps> = ({ onNa
                 session.user.id,
                 currentTask.submission_type,
                 vote,
-                3, // Default confidence
+                3,
                 reason
             );
 

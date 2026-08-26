@@ -161,7 +161,7 @@ const TaskInsightsModal: React.FC<TaskInsightsModalProps> = ({ visible, onClose,
             // Fetch basic stats (unique users, etc.)
             const { data: subStats, error: statsError } = await supabase
                 .from('submissions')
-                .select('user_id', { count: 'exact', head: false })
+                .select('user_id, status', { count: 'exact', head: false })
                 .eq(isCampaign ? 'campaign_id' : 'task_id', taskId);
 
             if (statsError) throw statsError;
@@ -384,7 +384,7 @@ export const CompanyDashboardScreen: React.FC<CompanyDashboardScreenProps> = ({ 
                 getTransactionHistory(userId, 5),
                 getUserBalance(userId),
                 getCompanyCampaigns(userId),
-                ApiKeyService.getApiKeys(),
+                ApiKeyService.getApiKeys(userId),
             ]);
 
             if (statsRes.data) setStats(statsRes.data);
@@ -1011,7 +1011,7 @@ export const CompanyDashboardScreen: React.FC<CompanyDashboardScreenProps> = ({ 
                                         </View>
                                     </View>
                                     <Text style={{ color: theme.textSecondary, fontSize: 11, marginBottom: 4 }}>
-                                        Key ID: {key.id}
+                                        Key ID: {key.key_id}
                                     </Text>
                                     <Text style={{ color: theme.textSecondary, fontSize: 10 }}>
                                         Created: {new Date(key.created_at).toLocaleDateString()}

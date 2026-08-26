@@ -31,9 +31,12 @@ export async function authenticate(req: Request, requiredScopes: string[] = []):
         return { key_id: keyId, authorized: false, error: 'API Key is revoked or inactive.' };
     }
 
-    // TODO: Implement actual cryptographic hash verification (e.g. bcrypt/argon2 depending on what was used to hash the secret)
-    // For now, we simulate a direct match (in reality, store hashes, never plaintext secrets)
-    const isMatch = (secret === apiKey.secret_hash);
+    const digest = await crypto.subtle.digest(
+        'SHA-256',
+        new TextEncoder().encode(secret),
+    );
+    const computedHash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+    const isMatch = constantTimeEqual(computedHash, apiKey.secret_hash);
     if (!isMatch) {
         return { key_id: keyId, authorized: false, error: 'Invalid API Secret.' };
     }
@@ -57,9 +60,16 @@ export async function authenticate(req: Request, requiredScopes: string[] = []):
         }
     }
 
-    // TODO: Rate Limiting Implementation
-
     return { key_id: keyId, authorized: true };
+}
+
+function constantTimeEqual(left: string, right: string): boolean {
+    if (left.length !== right.length) return false;
+    let difference = 0;
+    for (let index = 0; index < left.length; index += 1) {
+        difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
+    }
+    return difference === 0;
 }
 
 export async function logApiRequest(keyId: string, endpoint: string, status: number, ipAddress: string) {

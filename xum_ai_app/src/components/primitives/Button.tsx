@@ -141,7 +141,7 @@ export const Button: React.FC<ButtonProps> = ({
         {
             height: config.height,
             paddingHorizontal: config.paddingHorizontal,
-            width: fullWidth ? '100%' : undefined,
+            width: fullWidth ? ('100%' as const) : undefined,
         },
         variantStyles.container,
         variant === 'primary' && !disabled && !loading && SHADOWS.md,

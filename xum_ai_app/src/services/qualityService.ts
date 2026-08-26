@@ -1,7 +1,7 @@
 /**
  * XUM AI — Quality Scoring Service
  *
- * Provides automated quality assessments for submissions:
+ * Provides pre-upload quality sanity checks for submissions:
  *   • Audio: SNR (Signal-to-Noise Ratio), Clarity, Silence detection
  *   • Image: Blur detection, NSFW check (placeholders for now)
  */
@@ -17,12 +17,14 @@ export interface AudioQualityScore {
     clarity: number;    // 0-100
     overall: number;    // 0-100
     isSilenced: boolean;
+    analyzer: 'client_heuristic';
 }
 
 export interface ImageQualityScore {
     blur: number;       // 0-100
     nsfw: boolean;
     overall: number;    // 0-100
+    analyzer: 'unavailable';
 }
 
 // ============================================================================
@@ -46,11 +48,10 @@ export async function analyzeAudioQuality(uri: string): Promise<AudioQualityScor
         // If it's < 2KB, it's likely silence or corrupted.
         const isSilenced = size < 2048;
 
-        // 2. SNR & Clarity (Heuristic based on size/metadata)
-        // This is a placeholder for actual FFT analysis.
-        // We'll simulate a score based on a "normal" range.
-        let snr = 75 + Math.random() * 20; // 75-95 base
-        let clarity = 80 + Math.random() * 15; // 80-95 base
+        // 2. Deterministic client-side pre-check only. The authoritative
+        // analyzer runs server-side after upload.
+        let snr = 70;
+        let clarity = 70;
 
         if (isSilenced) {
             snr = 10;
@@ -67,11 +68,12 @@ export async function analyzeAudioQuality(uri: string): Promise<AudioQualityScor
             snr: Math.round(snr),
             clarity: Math.round(clarity),
             overall: Math.round(overall),
-            isSilenced
+            isSilenced,
+            analyzer: 'client_heuristic'
         };
     } catch (err) {
         console.warn('[Quality] Audio analysis failed:', err);
-        return { snr: 0, clarity: 0, overall: 0, isSilenced: true };
+        return { snr: 0, clarity: 0, overall: 0, isSilenced: true, analyzer: 'client_heuristic' };
     }
 }
 
@@ -83,11 +85,21 @@ export async function analyzeAudioQuality(uri: string): Promise<AudioQualityScor
  * Analyzes image quality.
  */
 export async function analyzeImageQuality(uri: string): Promise<ImageQualityScore> {
-    // Placeholder
+    // Do not report a passing image score without a real decoder/policy
+    // analyzer. The server must replace this result after upload.
+    try {
+        const info = await FileSystem.getInfoAsync(uri);
+        if (!info.exists || ((info as any).size ?? 0) === 0) {
+            return { blur: 100, nsfw: false, overall: 0, analyzer: 'unavailable' };
+        }
+    } catch (err) {
+        console.warn('[Quality] Image sanity check failed:', err);
+    }
     return {
-        blur: 10, // low is good
+        blur: 100,
         nsfw: false,
-        overall: 90
+        overall: 0,
+        analyzer: 'unavailable'
     };
 }
 

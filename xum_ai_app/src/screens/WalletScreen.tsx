@@ -13,12 +13,13 @@ import ReactNative, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
-import { requestWithdrawal } from '../services/walletService';
+import { requestWithdrawal, verifyWithdrawalOtp } from '../services/walletService';
 import { Transaction } from '../services/types';
 import { UserService } from '../services/userService';
 import { ScreenName } from '../types';
 import { createGlobalStyles, createWalletStyles } from '../styles';
 import { SHADOWS } from '../constants/designTokens';
+import { isValidOtp } from '../services/otp';
 
 interface WalletScreenProps {
     onNavigate: (s: ScreenName) => void;
@@ -62,6 +63,7 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
     const [showOTPModal, setShowOTPModal] = useState(false);
     const [otpCode, setOtpCode] = useState('');
     const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
+    const [pendingWithdrawalId, setPendingWithdrawalId] = useState<string | null>(null);
     const [isLoadingPayments, setIsLoadingPayments] = useState(true);
 
     useEffect(() => {
@@ -165,6 +167,11 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
         setIsWithdrawing(false);
 
         if (result.success) {
+            if (!result.id) {
+                alert('Withdrawal created without a verification reference. Please contact support before retrying.');
+                return;
+            }
+            setPendingWithdrawalId(result.id);
             ReactNative.Alert.alert(
                 "Security Verification",
                 "A verification code has been sent to your registered email. Please enter it to authorize this withdrawal.",
@@ -177,17 +184,16 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
     };
 
     const verifyOTPAndComplete = async () => {
-        if (!otpCode || otpCode.length < 6) {
+        if (!pendingWithdrawalId || !session?.user?.id || !isValidOtp(otpCode)) {
             alert("Please enter a valid 6-digit OTP.");
             return;
         }
 
         setIsVerifyingOTP(true);
-        // Simulate OTP verification delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        const result = await verifyWithdrawalOtp(session.user.id, pendingWithdrawalId, otpCode);
         setIsVerifyingOTP(false);
 
-        if (otpCode === '123456' || otpCode.length === 6) { // Accept any 6 digits for demo/MVP
+        if (result.success) {
             ReactNative.Alert.alert(
                 "Withdrawal Successful",
                 "Your withdrawal request has been verified. Funds will be sent to your account in 24 hours.",
@@ -198,8 +204,9 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
             setUsdtDetails({ walletAddress: '', network: 'TRC20' });
             setWithdrawAmount('');
             setOtpCode('');
+            setPendingWithdrawalId(null);
         } else {
-            alert("Invalid OTP. Please try again.");
+            alert(result.error || "Invalid or expired OTP. Please try again.");
         }
     };
 

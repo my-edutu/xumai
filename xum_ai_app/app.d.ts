@@ -1,13 +1,5 @@
 /// <reference types="nativewind/types" />
 
-// React Native type shim for web compatibility
-// This allows react-native imports to work with react-native-web
-declare module 'react-native' {
-    import * as RN from 'react-native-web';
-    export = RN;
-    export as namespace ReactNative;
-}
-
 // Expo Camera types
 declare module 'expo-camera' {
     export const CameraView: React.ComponentType<any>;

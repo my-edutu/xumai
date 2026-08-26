@@ -37,6 +37,7 @@ export {
     getUserBalance,
     getTransactionHistory,
     requestWithdrawal,
+    verifyWithdrawalOtp,
     getLeaderboard,
     getUserEarningsPeriod,
 } from './walletService';

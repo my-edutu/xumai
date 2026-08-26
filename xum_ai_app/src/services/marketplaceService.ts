@@ -2,9 +2,9 @@ import { supabase } from '../supabaseClient';
 import {
     FeaturedTask,
     AdminTask,
-    Task,
     TaskType
 } from './types';
+import { Task } from '../types';
 import { getUserTaskStats } from './taskService';
 
 // Helper to check Supabase config

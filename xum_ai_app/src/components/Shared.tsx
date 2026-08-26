@@ -267,7 +267,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 const modalStyles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    justifyContent: 'end',
+    justifyContent: 'flex-end',
   },
   content: {
     borderTopLeftRadius: 32,

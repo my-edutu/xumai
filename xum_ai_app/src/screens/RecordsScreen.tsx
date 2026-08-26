@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
-import { TaskService, TaskSubmission } from '../services/taskService';
+import { TaskService } from '../services/taskService';
+import { TaskSubmission } from '../services/types';
 import { ScreenName } from '../types';
 import { createGlobalStyles, createCaptureStyles } from '../styles';
 

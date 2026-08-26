@@ -16,7 +16,7 @@ import { SPACING, TYPOGRAPHY, LAYOUT, SHADOWS, TEXT_STYLES } from '../constants/
 import { rgba } from '../utils/styleUtils';
 
 interface HomeProps {
-    onNavigate: (s: ScreenName) => void;
+    onNavigate: (s: ScreenName, params?: any) => void;
     balance: number;
     onOpenNeuralInput: () => void;
     onOpenContributorHub: () => void;
@@ -43,6 +43,7 @@ export const HomeScreen = ({
     const [stats, setStats] = useState<any>(null);
     const [streakDays, setStreakDays] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState('All');
 
     useEffect(() => {
         if (!session?.user?.id) return;
@@ -105,8 +106,6 @@ export const HomeScreen = ({
             setRefreshing(false);
         }
     }, [session?.user?.id, selectedCategory]);
-
-    const [selectedCategory, setSelectedCategory] = useState('All');
 
     // Fetch feed when category changes — real tasks only; the empty state
     // below handles categories with no active tasks.

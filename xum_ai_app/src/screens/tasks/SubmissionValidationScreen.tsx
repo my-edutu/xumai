@@ -178,6 +178,7 @@ export const SubmissionValidationScreen: React.FC<SubmissionValidationScreenProp
         const result = await submitValidationVote(
             submission.id,
             userId,
+            submission.submission_type,
             selectedVote,
             confidence,
             selectedVote === 'reject' ? reason.trim() : undefined
@@ -200,13 +201,13 @@ export const SubmissionValidationScreen: React.FC<SubmissionValidationScreenProp
 
     // ── Render media content ─────────────────────────────────────────────────
     const renderMedia = (sub: SubmissionToValidate) => {
-        const fileUrl = sub.submission_data?.file_url;
+        const fileUrl = sub.details?.file_url;
         const type = sub.task_type;
 
         if (!fileUrl) {
             // Text/Lexicon submission
-            const text = sub.submission_data?.translation_text
-                || sub.submission_data?.description
+            const text = sub.details?.translation_text
+                || sub.details?.description
                 || 'No content available';
             return (
                 <View style={{
@@ -436,7 +437,7 @@ export const SubmissionValidationScreen: React.FC<SubmissionValidationScreenProp
                 {renderMedia(submission)}
 
                 {/* Description (if any) */}
-                {submission.submission_data?.description && (
+                {submission.details?.description && (
                     <View style={{
                         backgroundColor: theme.surface,
                         borderRadius: 12,
@@ -447,7 +448,7 @@ export const SubmissionValidationScreen: React.FC<SubmissionValidationScreenProp
                     }}>
                         <Text style={{ color: theme.textSecondary, fontSize: 11, fontWeight: '700', marginBottom: 6, letterSpacing: 0.5 }}>DESCRIPTION</Text>
                         <Text style={{ color: theme.text, fontSize: 14, lineHeight: 20 }}>
-                            {submission.submission_data.description}
+                            {submission.details.description}
                         </Text>
                     </View>
                 )}

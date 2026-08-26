@@ -22,9 +22,7 @@ export default defineConfig(({ mode }) => {
     define: {
       '__DEV__': JSON.stringify(mode !== 'production'),
       'process.env.NODE_ENV': JSON.stringify(mode),
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      // Inline Supabase/Clerk credentials for web builds. Metro inlines
+      // Inline publishable Supabase/Clerk credentials for web builds. Metro inlines
       // process.env.EXPO_PUBLIC_* automatically, but Vite does not — without
       // these the web bundle ships placeholder credentials, every DB call
       // fails, and screens silently fall back to mock data.

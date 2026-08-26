@@ -1,6 +1,6 @@
 import { StyleSheet, Platform } from 'react-native';
 import { ThemeColors } from './context/ThemeContext';
-import { SPACING, TYPOGRAPHY, LAYOUT, SHADOWS } from './constants/designTokens';
+import { SPACING, TYPOGRAPHY, LAYOUT, SHADOWS, TEXT_STYLES } from './constants/designTokens';
 
 export const createGlobalStyles = (theme: ThemeColors) => StyleSheet.create({
     container: {
@@ -136,6 +136,18 @@ export const createGlobalStyles = (theme: ThemeColors) => StyleSheet.create({
         fontWeight: '700',
         color: theme.primary,
         marginBottom: SPACING.xs,
+    },
+    buttonPrimary: {
+        backgroundColor: theme.primary,
+        borderRadius: LAYOUT.radius.lg,
+        minHeight: LAYOUT.buttonHeight,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: SPACING.lg,
+    },
+    buttonText: {
+        ...TEXT_STYLES.button,
+        color: theme.textInverse,
     },
 });
 
