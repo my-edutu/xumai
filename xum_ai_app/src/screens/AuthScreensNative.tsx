@@ -1397,21 +1397,21 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                                 {mode === 'SignUp' && (
                                     <>
                                         <TextInput
-                                            style={[authStyles.inputFull, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, marginBottom: 16 }]}
+                                            style={[authStyles.inputFull, { backgroundColor: theme.surfaceHighlight, color: theme.text, borderColor: theme.border, marginBottom: 16 }]}
                                             placeholder="First Name"
                                             placeholderTextColor={theme.textSecondary}
                                             value={firstName}
                                             onChangeText={setFirstName}
                                         />
                                         <TextInput
-                                            style={[authStyles.inputFull, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, marginBottom: 16 }]}
+                                            style={[authStyles.inputFull, { backgroundColor: theme.surfaceHighlight, color: theme.text, borderColor: theme.border, marginBottom: 16 }]}
                                             placeholder="Last Name"
                                             placeholderTextColor={theme.textSecondary}
                                             value={lastName}
                                             onChangeText={setLastName}
                                         />
                                         <TextInput
-                                            style={[authStyles.inputFull, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, marginBottom: 16 }]}
+                                            style={[authStyles.inputFull, { backgroundColor: theme.surfaceHighlight, color: theme.text, borderColor: theme.border, marginBottom: 16 }]}
                                             placeholder="Username"
                                             placeholderTextColor={theme.textSecondary}
                                             autoCapitalize="none"
@@ -1426,7 +1426,7 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                                 )}
 
                                 <TextInput
-                                    style={[authStyles.inputFull, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, marginBottom: 16 }]}
+                                    style={[authStyles.inputFull, { backgroundColor: theme.surfaceHighlight, color: theme.text, borderColor: theme.border, marginBottom: 16 }]}
                                     placeholder="Email"
                                     placeholderTextColor={theme.textSecondary}
                                     autoCapitalize="none"
@@ -1438,7 +1438,7 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                                 {mode === 'SignUp' && (
                                     <>
                                         <TouchableOpacity
-                                            style={[authStyles.inputFull, { backgroundColor: '#1A1A24', borderColor: theme.border, justifyContent: 'center', marginBottom: 16 }]}
+                                            style={[authStyles.inputFull, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border, justifyContent: 'center', marginBottom: 16 }]}
                                             onPress={() => setIsCountryModalVisible(true)}
                                         >
                                             <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 }}>
@@ -1450,14 +1450,14 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
 
                                         <View style={authStyles.phoneRow}>
                                             {country && (
-                                                <View style={[authStyles.phoneDialCode, { backgroundColor: '#1A1A24', borderColor: theme.border }]}>
+                                                <View style={[authStyles.phoneDialCode, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
                                                     <Text style={{ color: theme.textSecondary, fontWeight: '600' }}>
                                                         {countries.find((c: any) => c.name === country)?.dial_code}
                                                     </Text>
                                                 </View>
                                             )}
                                             <TextInput
-                                                style={[authStyles.phoneInput, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, borderTopLeftRadius: country ? 0 : 12, borderBottomLeftRadius: country ? 0 : 12 }]}
+                                                style={[authStyles.phoneInput, { backgroundColor: theme.surfaceHighlight, color: theme.text, borderColor: theme.border, borderTopLeftRadius: country ? 0 : 12, borderBottomLeftRadius: country ? 0 : 12 }]}
                                                 placeholder="Phone Number"
                                                 placeholderTextColor={theme.textSecondary}
                                                 accessibilityLabel="Phone number (optional)"
@@ -1478,7 +1478,7 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                                 <View style={authStyles.passwordWrapper}>
                                     <TextInput
                                         ref={passwordInputRef}
-                                        style={[authStyles.inputFull, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, marginBottom: mode === 'SignUp' ? 16 : 0 }]}
+                                        style={[authStyles.inputFull, { backgroundColor: theme.surfaceHighlight, color: theme.text, borderColor: theme.border, marginBottom: mode === 'SignUp' ? 16 : 0 }]}
                                         placeholder="Password"
                                         placeholderTextColor={theme.textSecondary}
                                         secureTextEntry={!showPassword}
@@ -1500,7 +1500,7 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                                 {mode === 'SignUp' && (
                                     <View style={authStyles.passwordWrapper}>
                                         <TextInput
-                                            style={[authStyles.inputFull, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border }]}
+                                            style={[authStyles.inputFull, { backgroundColor: theme.surfaceHighlight, color: theme.text, borderColor: theme.border }]}
                                             placeholder="Confirm Password"
                                             placeholderTextColor={theme.textSecondary}
                                             secureTextEntry={!showPassword}
@@ -1512,7 +1512,7 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
 
                                 {mode === 'SignUp' && (
                                     <TextInput
-                                        style={[authStyles.inputFull, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, marginTop: 16 }]}
+                                        style={[authStyles.inputFull, { backgroundColor: theme.surfaceHighlight, color: theme.text, borderColor: theme.border, marginTop: 16 }]}
                                         placeholder="Referral code (optional)"
                                         placeholderTextColor={theme.textSecondary}
                                         autoCapitalize="characters"
