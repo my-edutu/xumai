@@ -113,9 +113,10 @@ import { SPACING, TYPOGRAPHY, LAYOUT, SHADOWS } from './constants/designTokens';
 import { ClerkProvider } from './context/ClerkProvider';
 import { useUser, useClerk } from '@clerk/clerk-expo';
 import { normalizeScreen } from './navigation/taskRouting';
+import { DEFAULT_THEME_ID, resolveThemePreference } from './utils/themePreference';
 
 // Legacy support - will be replaced by context
-let colors: ThemeColors = themePresets.midnight;
+let colors: ThemeColors = themePresets[DEFAULT_THEME_ID];
 
 // ============================================================================
 // TYPES
@@ -243,16 +244,21 @@ function App() {
   const [isContributorHubVisible, setIsContributorHubVisible] = useState(false);
   const [userEmail, setUserEmail] = useState('');
 
-  const [currentTheme, setCurrentTheme] = useState<ThemeId>('midnight');
+  const [currentTheme, setCurrentTheme] = useState<ThemeId>(DEFAULT_THEME_ID);
+  const themeSelectedManually = useRef(false);
 
-  // Load theme from storage
+  // Keep saved preferences; new accounts and invalid saved values start light.
   useEffect(() => {
-    AsyncStorage.getItem('themeId').then(themeId => {
-      if (themeId && themePresets[themeId as ThemeId]) {
-        setCurrentTheme(themeId as ThemeId);
-        colors = themePresets[themeId as ThemeId]; // Update legacy colors
-      }
-    });
+    let mounted = true;
+    AsyncStorage.getItem('themeId')
+      .then(savedTheme => {
+        if (!mounted || themeSelectedManually.current) return;
+        const resolved = resolveThemePreference(savedTheme, themePresets);
+        setCurrentTheme(resolved);
+        colors = themePresets[resolved];
+      })
+      .catch(error => console.warn('[Theme] Unable to restore appearance:', error));
+    return () => { mounted = false; };
   }, []);
 
   // Handle Deep Linking (Magic Links / Password Reset)
@@ -303,10 +309,30 @@ function App() {
   };
 
   const handleThemeChange = (themeId: ThemeId) => {
+    themeSelectedManually.current = true;
     setCurrentTheme(themeId);
     colors = themePresets[themeId]; // Update legacy colors
-    AsyncStorage.setItem('themeId', themeId);
+    void AsyncStorage.setItem('themeId', themeId).catch(error =>
+      console.warn('[Theme] Unable to save appearance:', error)
+    );
   };
+
+  // React Native styles the inner app; also synchronize browser chrome and
+  // Tailwind dark utilities with the selected theme on web.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const dark = currentTheme !== 'light';
+    document.documentElement.classList.toggle('dark', dark);
+    document.documentElement.setAttribute('data-xum-theme', dark ? 'dark' : 'light');
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    let color = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (!color) {
+      color = document.createElement('meta');
+      color.name = 'theme-color';
+      document.head.appendChild(color);
+    }
+    color.content = themePresets[currentTheme].background;
+  }, [currentTheme]);
 
   // Get current theme colors for dynamic styling
   const theme = themePresets[currentTheme];

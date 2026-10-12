@@ -70,7 +70,7 @@ export const AppearanceLabsScreen = ({ onNavigate, currentTheme, onThemeChange }
                         </View>
                     </View>
                     <View style={styles.toggleContainer}>
-                        <View style={[styles.toggleTrack, { backgroundColor: isDarkMode ? theme.primary : 'rgba(255,255,255,0.2)' }]}>
+                        <View style={[styles.toggleTrack, { backgroundColor: isDarkMode ? theme.primary : theme.border }]}>
                             <View style={[styles.toggleThumb, { marginLeft: isDarkMode ? 20 : 2 }]} />
                         </View>
                     </View>

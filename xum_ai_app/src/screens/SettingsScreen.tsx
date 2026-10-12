@@ -94,7 +94,7 @@ export const SettingsScreen = ({ onNavigate, onLogout, onBack }: SettingsScreenP
         {
             title: 'App Settings',
             items: [
-                { label: 'Appearance', icon: 'palette', value: themeId === 'midnight' ? 'Dark' : 'Light', screen: ScreenName.APPEARANCE_LABS },
+                { label: 'Appearance', icon: 'palette', value: themeId === 'light' ? 'Light' : 'Dark', screen: ScreenName.APPEARANCE_LABS },
                 { label: 'Language', icon: 'language', value: preferredLanguage, screen: ScreenName.LANGUAGE_SELECTION },
             ],
         },
