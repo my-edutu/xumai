@@ -2428,7 +2428,8 @@ export const OTPScreen = ({ onNavigate, userEmail }: ScreenProps) => {
                             ref={(ref: any | null) => { inputRefs.current[i] = ref; }}
                             style={[otpStyles.otpInput, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.primary }]}
                             keyboardType="number-pad"
-                            maxLength={6}
+                            // The handler clamps values after paste/autofill; a one-char maxLength
+                            // would discard the rest of a copied verification code.
                             autoComplete={i === 0 ? 'sms-otp' : 'off'}
                             value={digit}
                             onChangeText={(val: string) => handleChange(val, i)}
