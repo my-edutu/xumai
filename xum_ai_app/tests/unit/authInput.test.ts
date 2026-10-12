@@ -38,7 +38,7 @@ test('OTP accepts a six-digit paste and formatted SMS/autofill input', () => {
         nextFocusIndex: 5,
     });
     assert.equal(applyOtpInput(blank, 0, '123 456')?.digits.join(''), '123456');
-    assert.equal(applyOtpInput(blank, 4, '789012')?.digits.join(''), '7890');
+    assert.deepEqual(applyOtpInput(blank, 4, '789012')?.digits, ['', '', '', '', '7', '8']);
 });
 
 test('OTP handles deletion and safely ignores letters and invalid positions', () => {

@@ -785,7 +785,12 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
     const { theme } = useTheme();
     useWarmUpBrowser();
     const { width, height } = useWindowDimensions();
-    const authLayout = useMemo(() => getAuthLayoutMetrics(width, height), [width, height]);
+    // Mobile browsers resize the viewport when the soft keyboard opens.
+    // Avoid moving form fields under the user's finger mid-entry.
+    const authLayout = useMemo(
+        () => getAuthLayoutMetrics(width, Platform.OS === 'web' ? Math.max(height, SCREEN_HEIGHT) : height),
+        [width, height],
+    );
 
     const [mode, setMode] = useState<'Login' | 'SignUp'>('Login');
     const [showEmailForm, setShowEmailForm] = useState(false);
