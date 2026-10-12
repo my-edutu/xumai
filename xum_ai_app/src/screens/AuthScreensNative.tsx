@@ -32,7 +32,7 @@ import { useTheme } from '../context/ThemeContext';
 import { ScreenName } from '../types';
 import { getAccountType, AccountType } from './AccountTypeScreen';
 import { countries } from '../utils/countries';
-import { AUTH_FONT_WEIGHTS, getAuthLayoutMetrics } from '../utils/authLayout';
+import { AUTH_FONT_WEIGHTS, getAuthLayoutMetrics, getKeyboardStableAuthHeight } from '../utils/authLayout';
 import { normalizePhoneDigits, validateOptionalPhone, applyOtpInput } from '../utils/authInput';
 import {
     captureReferralFromUrl,
@@ -788,7 +788,7 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
     // Mobile browsers resize the viewport when the soft keyboard opens.
     // Avoid moving form fields under the user's finger mid-entry.
     const authLayout = useMemo(
-        () => getAuthLayoutMetrics(width, Platform.OS === 'web' ? Math.max(height, SCREEN_HEIGHT) : height),
+        () => getAuthLayoutMetrics(width, getKeyboardStableAuthHeight(height, SCREEN_HEIGHT, Platform.OS === 'web')),
         [width, height],
     );
 

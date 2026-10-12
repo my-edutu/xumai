@@ -28,3 +28,7 @@ export const getAuthLayoutMetrics = (width: number, height: number): AuthLayoutM
     buttonHeight: width < 360 ? 56 : 60,
     isCompact: width < 480,
 });
+
+/** Keep the login form stable when mobile web browsers shrink the visual viewport for a keyboard. */
+export const getKeyboardStableAuthHeight = (currentHeight: number, initialHeight: number, isWeb: boolean): number =>
+    isWeb ? Math.max(currentHeight, initialHeight) : currentHeight;
