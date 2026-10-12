@@ -6,14 +6,14 @@ let html = readFileSync(file, 'utf8');
 // Expo generates its own HTML during export, so changes to public/index.html
 // alone are not sufficient for predictable production metadata.
 html = html
-  .replace(/<meta\b[^>]*\b(?:name|property)=["'](?:description|robots|og:[^"']*|twitter:[^"']*)["'][^>]*\/?>/gi, '')
+  .replace(/<meta\b[^>]*\b(?:name|property)=["'](?:description|robots|theme-color|og:[^"']*|twitter:[^"']*)["'][^>]*\/?>/gi, '')
   .replace(/<link\b[^>]*\brel=["'](?:canonical|icon|apple-touch-icon|manifest)["'][^>]*\/?>/gi, '')
   .replace(/<title>[\s\S]*?<\/title>/i, '');
 const tags = `
   <title>XUM AI App | Contribute to Better AI</title>
   <meta name="description" content="XUM AI contributor app for voice, image, video and language data tasks, validation and rewards." />
   <meta name="robots" content="noindex,nofollow,noarchive,nosnippet" />
-  <meta name="theme-color" content="#101522" />
+  <meta name="theme-color" content="#f8fafc" />
   <link rel="canonical" href="https://app.xumai.app/" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/icon.png" />
