@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "main": "index.tsx",
-    "scripts": {
+  "scripts": {
     "start": "set REACT_NATIVE_PACKAGER_HOSTNAME=192.168.100.10 && expo start --host lan",
     "share": "expo start --tunnel",
     "prebuild:android": "expo prebuild --no-install --platform android",
@@ -16,7 +16,7 @@
     "dev:vite": "vite",
     "build": "npm run build:web",
     "build:vite": "vite build",
-    "build:web": "expo export --platform web --output-dir dist-web",
+    "build:web": "expo export --platform web --output-dir dist-web && node scripts/post-export-seo.mjs",
     "prebuild:web": "tsx scripts/validate-web-env.ts",
     "preview:web": "npx serve dist-web -l 4173",
     "preview": "vite preview",
