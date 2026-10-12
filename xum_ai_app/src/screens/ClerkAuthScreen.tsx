@@ -194,7 +194,7 @@ export const ClerkAuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) =>
                 </LinearGradient>
 
                 <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
                     style={styles.formContainer}
                 >
                     <View style={styles.form}>
@@ -207,6 +207,7 @@ export const ClerkAuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) =>
                             onChangeText={setVerificationCode}
                             keyboardType="number-pad"
                             maxLength={6}
+                            autoComplete="sms-otp"
                         />
 
                         {error ? (
@@ -259,10 +260,10 @@ export const ClerkAuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) =>
             </LinearGradient>
 
             <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
                 style={styles.formContainer}
             >
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="none">
                     <View style={styles.form}>
                         {/* Name field (signup only) */}
                         {mode === 'signup' && (

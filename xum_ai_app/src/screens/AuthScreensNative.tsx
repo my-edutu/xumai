@@ -33,6 +33,7 @@ import { ScreenName } from '../types';
 import { getAccountType, AccountType } from './AccountTypeScreen';
 import { countries } from '../utils/countries';
 import { AUTH_FONT_WEIGHTS, getAuthLayoutMetrics } from '../utils/authLayout';
+import { normalizePhoneDigits, validateOptionalPhone, applyOtpInput } from '../utils/authInput';
 import {
     captureReferralFromUrl,
     getPendingReferralCode,
@@ -797,6 +798,7 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
+    const passwordInputRef = useRef<TextInput>(null);
     const [country, setCountry] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -1125,6 +1127,10 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
             setError('Password is required');
             return;
         }
+        if (mode === 'SignUp' && !validateOptionalPhone(phoneNumber)) {
+            setError('Please enter a valid phone number (7–15 digits), or leave it empty.');
+            return;
+        }
         if (mode === 'SignUp' && password !== confirmPassword) {
             setError('Passwords do not match');
             return;
@@ -1165,7 +1171,8 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                     firstName: firstName,
                     lastName: lastName,
                     unsafeMetadata: {
-                        phoneNumber: phoneNumber,
+                        phoneNumber: normalizePhoneDigits(phoneNumber),
+                        phoneDialCode: countries.find((c: any) => c.name === country)?.dial_code || '',
                         country: country
                     }
                 });
@@ -1232,14 +1239,14 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
 
     return (
         <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
             style={[authStyles.container, { backgroundColor: theme.background }]}
         >
             <ScrollView
                 contentContainerStyle={authStyles.scrollContent}
                 bounces={false}
-                keyboardShouldPersistTaps="handled"
-                keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+                keyboardShouldPersistTaps="always"
+                keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : Platform.OS === 'android' ? 'on-drag' : 'none'}
             >
                 {/* Visual Header Background (Textured Design) */}
                 <View style={[authStyles.visualHeader, { backgroundColor: theme.primaryDark, height: authLayout.headerHeight }]}>
@@ -1436,21 +1443,28 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                                             </View>
                                         </TouchableOpacity>
 
-                                        <View style={{ flexDirection: 'row', width: '100%', marginBottom: 16 }}>
+                                        <View style={authStyles.phoneRow}>
                                             {country && (
-                                                <View style={{ height: 52, backgroundColor: '#1A1A24', borderColor: theme.border, borderWidth: 1, borderRightWidth: 0, borderTopLeftRadius: 12, borderBottomLeftRadius: 12, justifyContent: 'center', paddingHorizontal: 12 }}>
+                                                <View style={[authStyles.phoneDialCode, { backgroundColor: '#1A1A24', borderColor: theme.border }]}>
                                                     <Text style={{ color: theme.textSecondary, fontWeight: '600' }}>
                                                         {countries.find((c: any) => c.name === country)?.dial_code}
                                                     </Text>
                                                 </View>
                                             )}
                                             <TextInput
-                                                style={[authStyles.inputFull, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, marginBottom: 0, flex: 1, borderTopLeftRadius: country ? 0 : 12, borderBottomLeftRadius: country ? 0 : 12 }]}
+                                                style={[authStyles.phoneInput, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, borderTopLeftRadius: country ? 0 : 12, borderBottomLeftRadius: country ? 0 : 12 }]}
                                                 placeholder="Phone Number"
                                                 placeholderTextColor={theme.textSecondary}
+                                                accessibilityLabel="Phone number (optional)"
                                                 keyboardType="phone-pad"
+                                                autoComplete="tel-national"
+                                                textContentType="telephoneNumber"
+                                                autoCapitalize="none"
+                                                autoCorrect={false}
                                                 value={phoneNumber}
-                                                onChangeText={setPhoneNumber}
+                                                onChangeText={(value) => setPhoneNumber(normalizePhoneDigits(value))}
+                                                returnKeyType="next"
+                                                onSubmitEditing={() => passwordInputRef.current?.focus()}
                                             />
                                         </View>
                                     </>
@@ -1458,6 +1472,7 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
 
                                 <View style={authStyles.passwordWrapper}>
                                     <TextInput
+                                        ref={passwordInputRef}
                                         style={[authStyles.inputFull, { backgroundColor: '#1A1A24', color: theme.text, borderColor: theme.border, marginBottom: mode === 'SignUp' ? 16 : 0 }]}
                                         placeholder="Password"
                                         placeholderTextColor={theme.textSecondary}
@@ -1717,6 +1732,34 @@ const authStyles = StyleSheet.create({
         fontWeight: '500',
         borderWidth: 1,
     },
+    phoneRow: {
+        flexDirection: 'row',
+        alignItems: 'stretch',
+        width: '100%',
+        minWidth: 0,
+        marginBottom: 16,
+    },
+    phoneDialCode: {
+        height: 56,
+        borderWidth: 1,
+        borderRightWidth: 0,
+        borderTopLeftRadius: 12,
+        borderBottomLeftRadius: 12,
+        justifyContent: 'center',
+        paddingHorizontal: 12,
+        flexShrink: 0,
+    },
+    // inputFull uses width:100% and would overflow next to the country code.
+    phoneInput: {
+        flex: 1,
+        minWidth: 0,
+        height: 56,
+        borderWidth: 1,
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        fontSize: 15,
+        fontWeight: '500',
+    },
     inputFull: {
         width: '100%',
         height: 56,
@@ -1939,7 +1982,10 @@ export const ForgotPasswordScreen = ({ onNavigate }: ScreenProps) => {
     };
 
     return (
-        <View style={[forgotStyles.container, { backgroundColor: theme.background }]}>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
+            style={[forgotStyles.container, { backgroundColor: theme.background }]}
+        >
             {/* Header */}
             <LinearGradient
                 colors={[`${theme.primary}33`, 'transparent']}
@@ -1958,7 +2004,12 @@ export const ForgotPasswordScreen = ({ onNavigate }: ScreenProps) => {
             </LinearGradient>
 
             {/* Content */}
-            <View style={forgotStyles.content}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={forgotStyles.content}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
+            >
                 {error && (
                     <Text style={{ color: '#ef4444', fontSize: 13, fontWeight: '700', textAlign: 'center', marginBottom: 16 }}>
                         {error}
@@ -2110,8 +2161,8 @@ export const ForgotPasswordScreen = ({ onNavigate }: ScreenProps) => {
                         </TouchableOpacity>
                     </>
                 )}
-            </View>
-        </View>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 
@@ -2148,7 +2199,7 @@ const forgotStyles = StyleSheet.create({
         textTransform: 'uppercase',
     },
     content: {
-        flex: 1,
+        flexGrow: 1,
         padding: 32,
         justifyContent: 'center',
     },
@@ -2240,15 +2291,10 @@ export const OTPScreen = ({ onNavigate, userEmail }: ScreenProps) => {
     }, []);
 
     const handleChange = (val: string, index: number) => {
-        if (!/^\d*$/.test(val)) return;
-
-        const newOtp = [...otp];
-        newOtp[index] = val.slice(-1);
-        setOtp(newOtp);
-
-        if (val && index < 5) {
-            inputRefs.current[index + 1]?.focus();
-        }
+        const result = applyOtpInput(otp, index, val);
+        if (!result) return;
+        setOtp(result.digits);
+        if (val) inputRefs.current[result.nextFocusIndex]?.focus();
     };
 
     const handleKeyPress = (key: string, index: number) => {
@@ -2372,8 +2418,9 @@ export const OTPScreen = ({ onNavigate, userEmail }: ScreenProps) => {
                             key={i}
                             ref={(ref: any | null) => { inputRefs.current[i] = ref; }}
                             style={[otpStyles.otpInput, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.primary }]}
-                            keyboardType="numeric"
-                            maxLength={1}
+                            keyboardType="number-pad"
+                            maxLength={6}
+                            autoComplete={i === 0 ? 'sms-otp' : 'off'}
                             value={digit}
                             onChangeText={(val: string) => handleChange(val, i)}
                             onKeyPress={({ nativeEvent }: any) => handleKeyPress(nativeEvent.key, i)}
