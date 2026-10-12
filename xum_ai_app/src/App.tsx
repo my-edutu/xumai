@@ -219,6 +219,24 @@ function App() {
   const fontsLoaded = useAppFonts();
 
   const [currentScreen, setCurrentScreen] = useState<ScreenName>(ScreenName.SPLASH);
+  // The Expo UI uses internal screen state, not public browser routes. Keep each
+  // screen's title descriptive while keeping all contributor data out of search.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const label = String(currentScreen).toLowerCase().split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+    document.title = `${label} | XUM AI App`;
+    let description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (!description) {
+      description = document.createElement('meta');
+      description.name = 'description';
+      document.head.appendChild(description);
+    }
+    description.content = `XUM AI contributor app — ${label}. Complete data tasks and support better AI.`;
+    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (!robots) { robots = document.createElement('meta'); robots.name = 'robots'; document.head.appendChild(robots); }
+    robots.content = 'noindex,nofollow,noarchive,nosnippet';
+  }, [currentScreen]);
   const [navigationParams, setNavigationParams] = useState<any>(null);
   const [history, setHistory] = useState<ScreenName[]>([]);
   const [isNeuralInputVisible, setIsNeuralInputVisible] = useState(false);

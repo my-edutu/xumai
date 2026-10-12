@@ -1,0 +1,43 @@
+name: Contributor web SEO build
+on:
+  pull_request:
+  push:
+    branches:
+      - feat/xum-seo-brand-assets-20261012
+jobs:
+  contributor-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: xum_ai_app
+    env:
+      # Nonproduction, syntactically valid PUBLIC values for static-build validation only.
+      # Never use these in Dokploy production.
+      EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-public-test-key-not-a-secret
+      EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: xum_ai_app/package-lock.json
+      - run: npm ci
+      - run: npm run test:unit
+      - run: npx tsc --noEmit
+      - run: npm run build:web
+      - name: Verify privacy, social card, favicon and canonical output
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, existsSync } from 'node:fs';
+          import assert from 'node:assert/strict';
+          const html = readFileSync('dist-web/index.html','utf8');
+          assert.match(html, /noindex,nofollow,noarchive/);
+          assert.match(html, /https:\/\/app.xumai.app\//);
+          assert.match(html, /https:\/\/app.xumai.app\/og-image.png/);
+          assert.match(html, /favicon.png/);
+          assert.ok(existsSync('dist-web/og-image.png'), 'OG social card must be exported');
+          assert.ok(existsSync('dist-web/favicon.png'), 'favicon must be exported');
+          console.log('Expo web branding and private SEO metadata verified.');
+          NODE
