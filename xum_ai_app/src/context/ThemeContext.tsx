@@ -1,5 +1,6 @@
 import React from 'react';
 import { PALETTE, SPACING, TYPOGRAPHY, LAYOUT, SHADOWS } from '../constants/designTokens';
+import { DEFAULT_THEME_ID } from '../utils/themePreference';
 
 export interface ThemeColors {
     // Core Brand
@@ -201,8 +202,8 @@ export interface ThemeContextType {
 
 // Initial context with default values
 export const ThemeContext = React.createContext<ThemeContextType>({
-    theme: themePresets.midnight,
-    themeId: 'midnight',
+    theme: themePresets[DEFAULT_THEME_ID],
+    themeId: DEFAULT_THEME_ID,
     setTheme: () => { },
     tokens: {
         spacing: SPACING,
