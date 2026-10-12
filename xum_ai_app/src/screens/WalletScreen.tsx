@@ -319,7 +319,7 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
                 onRequestClose={() => setShowWithdrawModal(false)}
             >
                 <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
                     style={{ flex: 1 }}
                 >
                     <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }}>

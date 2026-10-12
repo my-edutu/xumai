@@ -1590,9 +1590,13 @@ export const AuthScreen = ({ onNavigate }: ScreenProps) => {
                                 placeholderTextColor={theme.textSecondary}
                                 value={countrySearch}
                                 onChangeText={setCountrySearch}
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                returnKeyType="search"
                             />
 
                             <FlatList
+                                keyboardShouldPersistTaps="always"
                                 data={filteredCountries}
                                 keyExtractor={(item: any) => item.code}
                                 renderItem={({ item }: { item: any }) => (
