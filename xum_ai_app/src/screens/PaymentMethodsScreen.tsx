@@ -271,7 +271,7 @@ export const PaymentMethodsScreen = ({ onNavigate, onBack }: PaymentMethodsScree
             >
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }}>
                     <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
                         style={{ width: '100%' }}
                     >
                         <View style={{ backgroundColor: theme.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: SCREEN_HEIGHT * 0.85 }}>
