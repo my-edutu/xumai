@@ -10,4 +10,4 @@ This web app is private and uses `noindex,nofollow`. The canonical Expo/Metro bu
 The administrative app must remain noindex, with robots.txt disallowing crawling. Server-side authorization, session policies, RLS and MFA must be implemented independently of metadata.
 
 ## Social assets
-Shared public OG artwork is served by https://xumai.app/og-image.svg. Consider publishing a 1200x630 JPG/PNG as the public social preview because many social crawlers do not support SVG.
+Branded PNG social cards are served from each application's local `/og-image.png` path. The public website uses `https://xumai.app/og-image.png`; the contributor web app uses `https://app.xumai.app/og-image.png`; the admin app uses `https://admin.xumai.app/og-image.png`. The social preview is 600x315 pixels, and larger 1200x630 artwork can be substituted later.

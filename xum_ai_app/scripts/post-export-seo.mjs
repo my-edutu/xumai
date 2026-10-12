@@ -23,12 +23,14 @@ const tags = `
   <meta property="og:title" content="XUM AI App | Contribute to Better AI" />
   <meta property="og:description" content="Contribute voice, image, video and language data for better AI." />
   <meta property="og:url" content="https://app.xumai.app/" />
-  <meta property="og:image" content="https://xumai.app/og-image.svg" />
+  <meta property="og:image" content="https://app.xumai.app/og-image.png" />
+  <meta property="og:image:width" content="600" />
+  <meta property="og:image:height" content="315" />
   <meta property="og:image:alt" content="XUM AI — Human intelligence. Better AI." />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="XUM AI App | Contribute to Better AI" />
   <meta name="twitter:description" content="Contribute to AI data tasks and validation with XUM AI." />
-  <meta name="twitter:image" content="https://xumai.app/og-image.svg" />
+  <meta name="twitter:image" content="https://app.xumai.app/og-image.png" />
 `;
 if (!html.includes('</head>')) throw new Error('Expo export missing </head>');
 html = html.replace('</head>', tags + '</head>');
