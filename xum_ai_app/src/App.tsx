@@ -682,6 +682,8 @@ const AppContent = ({
         return <CompanyDashboardScreen onNavigate={navigate} onLogout={handleLogout} />;
       case ScreenName.HOME:
         return <HomeScreen onNavigate={navigate} balance={balance} onOpenNeuralInput={() => setIsNeuralInputVisible(true)} onOpenContributorHub={() => setIsContributorHubVisible(true)} session={{ user }} />;
+      case ScreenName.MONETIZATION_CENTER:
+        return <MonetizationCenterScreen onNavigate={navigate} onBack={goBack} />;
       case ScreenName.WALLET:
         return <WalletScreen onNavigate={navigate} onBack={goBack} balance={balance} transactions={transactions} onOpenContributorHub={() => setIsContributorHubVisible(true)} onOpenNeuralInput={() => setIsNeuralInputVisible(true)} session={{ user }} accountType={accountType} />;
       case ScreenName.SETTINGS:
