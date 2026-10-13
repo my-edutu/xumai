@@ -74,6 +74,29 @@ BEGIN
 END
 $function$;
 
+-- Reviewer can inspect decision reasons by pseudonymous ID, not contributor
+-- phone, email, banking or raw fraud evidence. Never return balance estimates.
+CREATE OR REPLACE FUNCTION public.admin_recent_eligibility_decisions_v1(
+    p_limit integer DEFAULT 20
+) RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, public, xum_monetization
+AS $function$
+DECLARE v_actor text; v_decisions jsonb;
+BEGIN
+   v_actor := xum_monetization.assert_admin_permission('eligibility_review');
+   SELECT COALESCE(jsonb_agg(to_jsonb(d) ORDER BY d.assessed_at DESC,d.id DESC),'[]'::jsonb)
+   INTO v_decisions FROM (
+     SELECT id, identity_link_id, policy_version_id, eligibility,
+       unmet_requirements, assessed_at
+     FROM xum_monetization.eligibility_decisions
+     ORDER BY assessed_at DESC,id DESC
+     LIMIT LEAST(GREATEST(COALESCE(p_limit,20),1),50)
+   ) d;
+   RETURN jsonb_build_object('decisions',v_decisions,'read_only',true,
+       'can_withdraw',false);
+END
+$function$;
+
 -- Administrators can PROPOSE immutable drafts only. A separate reviewer must publish.
 -- All numeric and type constraints are enforced by table checks and explicit casts.
 CREATE OR REPLACE FUNCTION public.admin_propose_monetization_policy_v1(
@@ -317,5 +340,8 @@ REVOKE ALL ON FUNCTION public.admin_propose_monetization_policy_v1(jsonb,text) F
 GRANT EXECUTE ON FUNCTION public.admin_propose_monetization_policy_v1(jsonb,text) TO authenticated;
 REVOKE ALL ON FUNCTION public.admin_publish_monetization_policy_v1(uuid,text,timestamptz) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_publish_monetization_policy_v1(uuid,text,timestamptz) TO authenticated;
+
+REVOKE ALL ON FUNCTION public.admin_recent_eligibility_decisions_v1(integer) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_recent_eligibility_decisions_v1(integer) TO authenticated;
 
 COMMIT;
