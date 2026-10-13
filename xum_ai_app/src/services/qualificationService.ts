@@ -8,6 +8,7 @@ export interface QualificationQuestion {
   position: number;
 }
 export interface QualificationAttempt {
+  status: 'ready';
   attempt_id: string;
   expires_at: string;
   question_count: number;
@@ -52,6 +53,7 @@ export function parseQualificationAttempt(input: unknown): QualificationAttempt 
     throw new Error('Invalid assessment question set.');
   }
   return {
+    status: 'ready',
     attempt_id: input.attempt_id,
     expires_at: input.expires_at,
     question_count: input.question_count as number,
