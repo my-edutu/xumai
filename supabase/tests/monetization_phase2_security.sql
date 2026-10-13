@@ -77,9 +77,10 @@ BEGIN
    IF SQLERRM='A recorded decision was overwritten' THEN RAISE; END IF;
  END;
  BEGIN
-  UPDATE xum_monetization.policy_versions SET status='draft' WHERE id=p;
-  -- Draft policy editing remains allowed, but published policies are immutable.
- EXCEPTION WHEN OTHERS THEN RAISE;
+  UPDATE xum_monetization.policy_versions SET minimum_age=19 WHERE id=p;
+  RAISE EXCEPTION 'A versioned eligibility policy was overwritten';
+ EXCEPTION WHEN raise_exception THEN
+   IF SQLERRM='A versioned eligibility policy was overwritten' THEN RAISE; END IF;
  END;
 END $$;
 RESET ROLE;
