@@ -1,7 +1,10 @@
-
 import { supabase } from '../supabaseClient';
-import { UserProfile } from '../types';
 
+/**
+ * Backward-compatible status shape while older UI references are migrated.
+ * Followers are NOT qualification evidence and are always zero in this adapter.
+ * Monetary authorization must NEVER rely on this client-side object.
+ */
 export interface MonetizationStatus {
     isEligible: boolean;
     currentFollowers: number;
@@ -9,91 +12,76 @@ export interface MonetizationStatus {
     percentage: number;
     canApply: boolean;
     description: string;
+    status: 'not_monetized' | 'eligible';
+    reason: string;
+    canWithdraw: false;
 }
 
+interface RestrictedSnapshot {
+    status?: string;
+    reason?: string;
+    program_available?: boolean;
+    can_withdraw?: boolean;
+}
+
+const unavailable = (reason: string, description: string): MonetizationStatus => ({
+    isEligible: false,
+    currentFollowers: 0,
+    targetFollowers: 0,
+    percentage: 0,
+    canApply: false,
+    status: 'not_monetized',
+    reason,
+    canWithdraw: false,
+    description,
+});
+
+/**
+ * Read-only; no arbitrary userId is forwarded to the server.
+ * Supabase authenticates the Clerk JWT and resolves its own `sub`.
+ * Missing migration or invalid identity is a fail-closed result.
+ */
 export const MonetizationThresholdService = {
-    /**
-     * Get the global monetization target followers from platform settings.
-     * Default is 1000 if not set.
-     */
+    /** @deprecated Follower thresholds must never unlock earnings. */
     async getGlobalTargetFollowers(): Promise<number> {
-        try {
-            const { data, error } = await supabase
-                .from('platform_settings')
-                .select('value')
-                .eq('key', 'monetization_target_followers')
-                .single();
-
-            if (error || !data) {
-                // Return default fallback if setting not found
-                return 1000;
-            }
-
-            // Ensure we handle numeric value correctly
-            return Number(data.value) || 1000;
-        } catch (error) {
-            console.error('[MonetizationThresholdService] Error fetching target:', error);
-            return 1000;
-        }
+        return 0;
     },
 
-    /**
-     * Check if a user meets the monetization eligibility criteria.
-     * Checks followers count against the global target.
-     */
     async checkMonetizationEligibility(userId: string): Promise<boolean> {
-        try {
-            const status = await this.getMonetizationStatus(userId);
-            return status.isEligible;
-        } catch (error) {
-            console.error('[MonetizationThresholdService] Error checking eligibility:', error);
-            return false;
-        }
+        const snapshot = await this.getMonetizationStatus(userId);
+        return snapshot.isEligible;
     },
 
-    /**
-     * Get detailed monetization status for a user.
-     * Returns current progress towards the target.
-     */
-    async getMonetizationStatus(userId: string): Promise<MonetizationStatus> {
+    async getMonetizationStatus(_userId: string): Promise<MonetizationStatus> {
         try {
-            // 1. Fetch user's follower count
-            const { data: userData, error: userError } = await supabase
-                .from('users')
-                .select('followers_count')
-                .eq('id', userId)
-                .single();
-
-            if (userError) throw userError;
-
-            // 2. Fetch global target
-            const target = await this.getGlobalTargetFollowers();
-            const current = userData?.followers_count || 0;
-
-            // Calculate percentage (0 to 100)
-            const percentage = Math.min(100, Math.max(0, (current / target) * 100));
-            const isEligible = current >= target;
+            const { data, error } = await supabase.rpc('get_my_monetization_status_v1');
+            if (error) {
+                console.warn('[Monetization] Read-only status not ready:', error.message);
+                return unavailable('SERVICE_UNAVAILABLE', 'Monetization eligibility is not available yet.');
+            }
+            const snapshot = (data ?? {}) as RestrictedSnapshot;
+            const enabled = snapshot.program_available === true;
+            const qualified = enabled && snapshot.status === 'eligible';
 
             return {
-                isEligible,
-                currentFollowers: current,
-                targetFollowers: target,
-                percentage,
-                canApply: isEligible, // Could add more conditions here (e.g. account age, trust score)
-                description: isEligible
-                    ? 'You are eligible for monetization!'
-                    : `Get ${target - current} more followers to unlock monetization.`
+                status: qualified ? 'eligible' : 'not_monetized',
+                reason: snapshot.reason || 'ASSESSMENT_PENDING',
+                isEligible: qualified,
+                // The application/review API is not deployed yet.
+                canApply: false,
+                canWithdraw: false,
+                currentFollowers: 0,
+                targetFollowers: 0,
+                percentage: 0, // No fabricated percentage from old follower count.
+                description: !enabled
+                    ? 'The XUM Monetization Program is not open yet.'
+                    : qualified
+                        ? 'Qualification reviewed. Monetization activation is a separate approval.'
+                        : 'Complete your verified qualifications to become eligible.',
             };
         } catch (error) {
-            console.error('[MonetizationThresholdService] Error getting status:', error);
-            return {
-                isEligible: false,
-                currentFollowers: 0,
-                targetFollowers: 1000,
-                percentage: 0,
-                canApply: false,
-                description: 'Unable to check status.'
-            };
+            console.warn('[Monetization] Could not fetch eligibility:', error);
+            return unavailable('SERVICE_UNAVAILABLE', 'Monetization eligibility is not available yet.');
         }
-    }
+    },
 };
