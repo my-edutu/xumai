@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS xum_monetization.qualification_questions (
   options jsonb NOT NULL CHECK (
     jsonb_typeof(options)='object'
     AND options ?& ARRAY['A','B','C','D']
-    AND (SELECT count(*) FROM jsonb_object_keys(options))=4
+    AND options = jsonb_build_object('A',options->'A','B',options->'B','C',options->'C','D',options->'D')
   ),
   correct_choice text NOT NULL CHECK (correct_choice IN ('A','B','C','D')),
   active boolean NOT NULL DEFAULT false,
@@ -226,26 +226,26 @@ BEGIN
  INTO v_items,v_distinct FROM jsonb_array_elements(p_answers);
  IF v_items<>v_attempt.total_count OR v_distinct<>v_items OR
     EXISTS (
-       SELECT 1 FROM jsonb_array_elements(p_answers) response
-       WHERE jsonb_typeof(response) <> 'object'
-          OR (SELECT count(*) FROM jsonb_object_keys(response))<>2
+       SELECT 1 FROM jsonb_array_elements(p_answers) AS response(value)
+       WHERE jsonb_typeof(response.value) <> 'object'
+          OR (SELECT count(*) FROM jsonb_object_keys(response.value))<>2
           OR NOT response ?& ARRAY['question_id','answer']
-          OR jsonb_typeof(response->'question_id') <> 'string'
-          OR (response->>'question_id') !~* '^[a-f0-9-]{36}$'
-          OR jsonb_typeof(response->'answer') <> 'string'
-          OR (response->>'answer') NOT IN ('A','B','C','D')
+          OR jsonb_typeof(response.value->'question_id') <> 'string'
+          OR (response.value->>'question_id') !~* '^[a-f0-9-]{36}$'
+          OR jsonb_typeof(response.value->'answer') <> 'string'
+          OR (response.value->>'answer') NOT IN ('A','B','C','D')
           OR NOT EXISTS (
             SELECT 1 FROM xum_monetization.qualification_attempt_questions aq
             WHERE aq.attempt_id=v_attempt.id
-               AND aq.question_id::text=response->>'question_id'
+               AND aq.question_id::text=response.value->>'question_id'
           )
     ) THEN
    RAISE EXCEPTION 'Incorrect answer set' USING ERRCODE='22023';
  END IF;
  UPDATE xum_monetization.qualification_attempt_questions aq
- SET answer_choice=response->>'answer'
- FROM jsonb_array_elements(p_answers) response
- WHERE aq.attempt_id=v_attempt.id AND aq.question_id::text=response->>'question_id';
+ SET answer_choice=response.value->>'answer'
+ FROM jsonb_array_elements(p_answers) AS response(value)
+ WHERE aq.attempt_id=v_attempt.id AND aq.question_id::text=response.value->>'question_id';
  SELECT count(*),count(*) FILTER(WHERE aq.answer_choice=q.correct_choice)
  INTO v_total,v_correct
  FROM xum_monetization.qualification_attempt_questions aq
