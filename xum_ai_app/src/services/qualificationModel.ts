@@ -33,7 +33,7 @@ export function parseQualificationAttempt(input: unknown): QualificationAttempt 
     return { status: 'unavailable', reason: typeof input.reason === 'string' ? input.reason : 'ASSESSMENT_UNAVAILABLE' };
   }
   if (typeof input.attempt_id !== 'string' || typeof input.expires_at !== 'string' ||
-      !Number.isInteger(input.question_count) || !Array.isArray(input.questions) ||
+      typeof input.question_count !== 'number' || !Number.isInteger(input.question_count) || !Array.isArray(input.questions) ||
       input.questions.length !== input.question_count || input.question_count < 10) {
     throw new Error('Incomplete qualification assessment.');
   }
