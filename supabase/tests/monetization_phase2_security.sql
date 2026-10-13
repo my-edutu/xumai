@@ -28,6 +28,17 @@ BEGIN
     OR has_function_privilege('anon','public.get_my_monetization_status_v1()','EXECUTE') THEN
    RAISE EXCEPTION 'Read-only RPC grant is incorrect';
  END IF;
+ BEGIN
+   UPDATE xum_monetization.program_controls
+   SET identity_bridge_enabled=TRUE, qualification_enabled=TRUE, earnings_enabled=TRUE;
+   RAISE EXCEPTION 'Earnings launch interlock was bypassed';
+ EXCEPTION WHEN check_violation THEN NULL;
+ END;
+ BEGIN
+   UPDATE xum_monetization.program_controls SET withdrawals_enabled=TRUE;
+   RAISE EXCEPTION 'Withdrawal launch interlock was bypassed';
+ EXCEPTION WHEN check_violation THEN NULL;
+ END;
 END $$;
 
 SET ROLE authenticated;
