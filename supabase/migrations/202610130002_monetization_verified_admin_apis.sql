@@ -228,12 +228,29 @@ DECLARE
    v_email jsonb; v_phone jsonb; v_age jsonb; v_age_valid jsonb;
    v_profile jsonb; v_academy jsonb; v_qualification jsonb; v_accuracy jsonb;
    v_approved jsonb; v_terms jsonb; v_license jsonb; v_account jsonb;
-   v_violations jsonb; v_duplicates jsonb; v_fraud jsonb;
+   v_violations jsonb; v_duplicates jsonb; v_fraud jsonb; v_country jsonb;
+   v_existing record;
    v_checks jsonb; v_unmet jsonb; v_digest text; v_decision_id uuid;
    v_eligible boolean;
 BEGIN
    IF p_event_key IS NULL OR length(p_event_key) NOT BETWEEN 12 AND 128 THEN
       RAISE EXCEPTION 'Invalid source event ID' USING ERRCODE='22023';
+   END IF;
+   -- Event replay is idempotent, but a reused key for a different
+   -- contributor/policy is always an error.
+   SELECT id,identity_link_id,policy_version_id,eligibility,unmet_requirements
+     INTO v_existing
+     FROM xum_monetization.eligibility_decisions
+     WHERE source_event_key=p_event_key;
+   IF FOUND THEN
+      IF v_existing.identity_link_id<>p_identity_link_id
+         OR v_existing.policy_version_id<>p_policy_id THEN
+         RAISE EXCEPTION 'Idempotency key belongs to another assessment'
+           USING ERRCODE='23505';
+      END IF;
+      RETURN jsonb_build_object('decision_id',v_existing.id,
+        'eligibility',v_existing.eligibility,
+        'unmet_requirements',v_existing.unmet_requirements);
    END IF;
    SELECT * INTO c FROM xum_monetization.program_controls WHERE singleton;
    IF NOT FOUND OR NOT c.identity_bridge_enabled OR NOT c.qualification_enabled THEN
@@ -264,10 +281,14 @@ BEGIN
    v_violations := xum_monetization.latest_verified_signal(p_identity_link_id,'unresolved_serious_policy_violations');
    v_duplicates := xum_monetization.latest_verified_signal(p_identity_link_id,'unresolved_duplicate_flags');
    v_fraud := xum_monetization.latest_verified_signal(p_identity_link_id,'unresolved_high_risk_fraud_flags');
+   v_country := xum_monetization.latest_verified_signal(p_identity_link_id,'residence_country');
 
    -- Numeric fields use strict JSON integer or bounded decimal format, no strings.
    -- Invalid JSON schema is a failed requirement, not a cast error or empty score.
    v_checks := jsonb_build_array(
+    jsonb_build_object('requirement','country_verified','passed',
+      p.country='*' OR v_country=to_jsonb(p.country),
+      'observed',v_country,'target',p.country),
     jsonb_build_object('requirement','account_active','passed',v_account='true'::jsonb,'observed',v_account,'target',true),
     jsonb_build_object('requirement','minimum_age_verified','passed',
       v_age_valid='true'::jsonb AND jsonb_typeof(v_age)='number'
@@ -324,6 +345,86 @@ BEGIN
    RETURN jsonb_build_object('decision_id',v_decision_id,'eligibility',
      CASE WHEN v_eligible THEN 'eligible' ELSE 'not_monetized' END,
      'unmet_requirements',v_unmet);
+END
+$function$;
+
+-- A decision is only a recent snapshot of evidence. New verification/fraud
+-- records, expiring evidence or old decisions invalidate the user-facing
+-- status until a trusted server reassesses them. This is not a payout grant.
+CREATE OR REPLACE FUNCTION public.get_my_monetization_status_v1()
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,xum_monetization
+AS $function$
+DECLARE
+    v_claims jsonb; v_subject text;
+    v_flags xum_monetization.program_controls%ROWTYPE;
+    v_link uuid; v_decision xum_monetization.eligibility_decisions%ROWTYPE;
+BEGIN
+    v_claims:=auth.jwt();
+    v_subject:=v_claims->>'sub';
+    IF v_claims->>'role' IS DISTINCT FROM 'authenticated'
+       OR v_subject IS NULL OR v_subject !~ '^user_[A-Za-z0-9]+
+REVOKE ALL ON FUNCTION xum_monetization.assert_admin_permission(text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION xum_monetization.latest_verified_signal(uuid,text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION xum_monetization.assess_contributor_v1(uuid,uuid,text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION xum_monetization.assess_contributor_v1(uuid,uuid,text) TO service_role;
+GRANT EXECUTE ON FUNCTION xum_monetization.latest_verified_signal(uuid,text) TO service_role;
+
+REVOKE ALL ON FUNCTION public.admin_monetization_policy_overview_v1() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_monetization_policy_overview_v1() TO authenticated;
+REVOKE ALL ON FUNCTION public.admin_propose_monetization_policy_v1(jsonb,text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_propose_monetization_policy_v1(jsonb,text) TO authenticated;
+REVOKE ALL ON FUNCTION public.admin_publish_monetization_policy_v1(uuid,text,timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_publish_monetization_policy_v1(uuid,text,timestamptz) TO authenticated;
+
+REVOKE ALL ON FUNCTION public.admin_recent_eligibility_decisions_v1(integer) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_recent_eligibility_decisions_v1(integer) TO authenticated;
+
+COMMIT;
+ THEN
+       RAISE EXCEPTION 'Verified authenticated Clerk session required'
+         USING ERRCODE='28000';
+    END IF;
+    SELECT * INTO v_flags FROM xum_monetization.program_controls WHERE singleton;
+    IF NOT FOUND OR NOT v_flags.identity_bridge_enabled
+       OR NOT v_flags.qualification_enabled THEN
+       RETURN jsonb_build_object('status','not_monetized',
+         'program_available',false,'can_withdraw',false,
+         'reason','PROGRAM_DISABLED');
+    END IF;
+    SELECT id INTO v_link FROM xum_monetization.contributor_identity_links
+      WHERE clerk_subject=v_subject AND link_state='verified' AND verified_at IS NOT NULL;
+    IF v_link IS NULL THEN
+       RETURN jsonb_build_object('status','not_monetized',
+         'program_available',true,'can_withdraw',false,
+         'reason','IDENTITY_UNVERIFIED');
+    END IF;
+    SELECT d.* INTO v_decision
+    FROM xum_monetization.eligibility_decisions d
+    JOIN xum_monetization.policy_versions p ON p.id=d.policy_version_id
+    WHERE d.identity_link_id=v_link
+      AND p.status='published' AND p.effective_at <= now()
+      AND d.assessed_at >= now()-interval '24 hours'
+      AND NOT EXISTS (
+         SELECT 1 FROM xum_monetization.verified_evidence e
+          WHERE e.identity_link_id=v_link
+            AND (e.recorded_at > d.assessed_at
+              OR (e.expires_at IS NOT NULL AND e.expires_at <= now()
+                  AND e.verified_at <= d.assessed_at))
+      )
+    ORDER BY d.assessed_at DESC,d.id DESC LIMIT 1;
+    IF NOT FOUND THEN
+       RETURN jsonb_build_object('status','not_monetized',
+         'program_available',true,'can_withdraw',false,
+         'reason','ASSESSMENT_PENDING');
+    END IF;
+    RETURN jsonb_build_object('status',v_decision.eligibility,
+      'program_available',true,'can_withdraw',false,
+      'reason','ASSESSED',
+      'policy_version_id',v_decision.policy_version_id,
+      'checked_at',v_decision.assessed_at,
+      'unmet_requirements',v_decision.unmet_requirements,
+      'checks',v_decision.requirement_results);
 END
 $function$;
 
