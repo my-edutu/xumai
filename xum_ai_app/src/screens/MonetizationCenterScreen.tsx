@@ -3,6 +3,7 @@ import {
   ActivityIndicator, ScrollView, Text, TouchableOpacity, View, StyleSheet,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { QualificationExam } from '../components/QualificationExam';
 import { useTheme } from '../context/ThemeContext';
 import { ScreenName } from '../types';
 import { supabase } from '../supabaseClient';
@@ -144,6 +145,9 @@ export const MonetizationCenterScreen: React.FC<Props> = ({ onNavigate, onBack }
             ))}
           </View>
         )}
+
+        <QualificationExam enabled={snapshot.programAvailable && !loading}
+          onCompleted={() => { void load(); }} />
 
         <Text style={[styles.sectionHeading, { color: theme.text }]}>Your earnings</Text>
         <View style={styles.grid}>
