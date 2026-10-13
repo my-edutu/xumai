@@ -24,9 +24,31 @@ CREATE TABLE IF NOT EXISTS xum_monetization.qualification_questions (
   correct_choice text NOT NULL CHECK (correct_choice IN ('A','B','C','D')),
   active boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
-  created_by text,
-  source_reference text UNIQUE CHECK (length(btrim(source_reference)) >= 8)
+  created_by text NOT NULL CHECK (length(btrim(created_by)) >= 3),
+  reviewed_by text,
+  reviewed_at timestamptz,
+  source_reference text UNIQUE CHECK (length(btrim(source_reference)) >= 8),
+  CHECK (NOT active OR (
+    reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL
+    AND reviewed_by <> created_by
+  ))
 );
+-- Once a reviewed question becomes active, its prompt, answer key and
+-- review provenance must not be altered. Publish a new question instead.
+CREATE OR REPLACE FUNCTION xum_monetization.prevent_active_question_edit()
+RETURNS trigger LANGUAGE plpgsql SET search_path=pg_catalog AS $function$
+BEGIN
+ IF TG_OP='DELETE' OR OLD.active THEN
+    RAISE EXCEPTION 'Published qualification questions are immutable';
+ END IF;
+ RETURN NEW;
+END
+$function$;
+DROP TRIGGER IF EXISTS xum_question_integrity ON xum_monetization.qualification_questions;
+CREATE TRIGGER xum_question_integrity BEFORE UPDATE OR DELETE
+ ON xum_monetization.qualification_questions FOR EACH ROW
+ EXECUTE FUNCTION xum_monetization.prevent_active_question_edit();
+
 -- Questions/correct choices are inaccessible to browser roles.
 
 CREATE TABLE IF NOT EXISTS xum_monetization.qualification_activation_requests (
