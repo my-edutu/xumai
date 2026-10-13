@@ -25,6 +25,13 @@ function generateOtp(): string {
 serve(async (request) => {
     if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
     if (request.method !== 'POST') return response({ error: 'Method not allowed.' }, 405);
+    // Deliberate server-side shutdown. Qualification testing may run, but no
+    // new withdrawal intent/OTP or payment provider call can execute.
+    const WITHDRAWALS_LOCKED = true;
+    if (WITHDRAWALS_LOCKED) return response({
+        error: 'Withdrawals are temporarily paused while XUM verifies contributor qualifications.',
+        code: 'WITHDRAWALS_LOCKED',
+    }, 423);
 
     const authorization = request.headers.get('Authorization');
     if (!authorization?.startsWith('Bearer ')) return response({ error: 'Authentication required.' }, 401);
