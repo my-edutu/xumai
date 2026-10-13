@@ -95,7 +95,7 @@ BEGIN
  -- Exact request ID cannot be read through private tables, so a second
  -- authenticated endpoint is not used here; independent approval is tested
  -- with a trusted CI setup lookup below.
- IF has_table_privilege('authenticated','xum_monetization.qualification_activation_requests','SELECT') THEN
+ IF has_schema_privilege('authenticated','xum_monetization','USAGE') THEN
    RAISE EXCEPTION 'Client can enumerate private activation requests';
  END IF;
 END
@@ -146,7 +146,7 @@ BEGIN
      OR (r->'questions'->0) ? 'correct_choice' THEN
    RAISE EXCEPTION 'Question payload leaked answers or incorrect task count: %',r;
  END IF;
- IF has_table_privilege('authenticated','xum_monetization.qualification_questions','SELECT') THEN
+ IF has_schema_privilege('authenticated','xum_monetization','USAGE') THEN
    RAISE EXCEPTION 'Answer key table visible to contributor';
  END IF;
  IF public.start_my_qualification_v1()->>'attempt_id' IS DISTINCT FROM r->>'attempt_id' THEN
