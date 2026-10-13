@@ -118,7 +118,7 @@ export function assessMonetizationEligibility(
       evidence.profileCompletenessPercent, policy.minimumProfilePercent);
   add('academy_complete', evidence.academyCompleted === true, evidence.academyCompleted, true);
   add('qualification_tasks',
-      Number.isSafeInteger(evidence.gradedQualificationTasks) &&
+      evidence.gradedQualificationTasks !== null && Number.isSafeInteger(evidence.gradedQualificationTasks) &&
         validThreshold(evidence.gradedQualificationTasks, policy.minimumQualificationTasks),
       evidence.gradedQualificationTasks, policy.minimumQualificationTasks);
   add('qualification_accuracy',
@@ -126,7 +126,7 @@ export function assessMonetizationEligibility(
         evidence.qualificationAccuracyPercent! <= 100,
       evidence.qualificationAccuracyPercent, policy.minimumQualificationAccuracyPercent);
   add('approved_contributions',
-      Number.isSafeInteger(evidence.approvedContributions) &&
+      evidence.approvedContributions !== null && Number.isSafeInteger(evidence.approvedContributions) &&
         validThreshold(evidence.approvedContributions, policy.minimumApprovedContributions),
       evidence.approvedContributions, policy.minimumApprovedContributions);
   add('terms_accepted',
