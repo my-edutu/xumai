@@ -7,6 +7,7 @@
  */
 
 export const REQUIREMENT_TITLES: Readonly<Record<string, string>> = {
+  country_verified: 'Country verification',
   account_active: 'Account active',
   minimum_age_verified: 'Age verified (18+)',
   email_verified: 'Email verified',
