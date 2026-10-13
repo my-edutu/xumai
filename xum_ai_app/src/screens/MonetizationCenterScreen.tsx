@@ -124,6 +124,27 @@ export const MonetizationCenterScreen: React.FC<Props> = ({ onNavigate, onBack }
           </View>
         )}
 
+        {!loading && snapshot.checks.length === 0 && (
+          <View style={[styles.empty, { backgroundColor: theme.surface, borderColor: theme.border, alignItems: 'stretch' }]}>
+            <Text style={{ fontSize: 15, fontWeight: '800', color: theme.text }}>Planned V1 qualification guide</Text>
+            <Text style={[styles.caption, { color: theme.textSecondary, lineHeight: 19 }]}>
+              These are proposed launch requirements, not a verified assessment of your account:
+            </Text>
+            {[
+              'Be 18+ with verified email and required phone verification',
+              'Complete at least 80% of your profile and XUM training',
+              'Pass 10 qualification assessments with at least 80% accuracy',
+              'Have 10 approved contributions and current data-rights consent',
+              'Clear outstanding serious policy, fraud and duplicate reviews',
+            ].map(point => (
+              <View key={point} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginTop: 8 }}>
+                <MaterialIcons name="info-outline" size={16} color={theme.primary} />
+                <Text style={{ flex: 1, fontSize: 12, lineHeight: 19, color: theme.textSecondary }}>{point}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         <Text style={[styles.sectionHeading, { color: theme.text }]}>Your earnings</Text>
         <View style={styles.grid}>
           {['Pending', 'Available', 'On Hold', 'Withdrawn'].map(label => (
