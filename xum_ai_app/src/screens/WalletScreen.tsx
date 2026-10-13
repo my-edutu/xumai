@@ -223,6 +223,24 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
             </View>
 
             <ScrollView style={styles.flex1} contentContainerStyle={styles.scrollContent}>
+                <TouchableOpacity
+                    accessibilityRole="button"
+                    onPress={() => onNavigate(ScreenName.MONETIZATION_CENTER)}
+                    style={{
+                        flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12,
+                        borderRadius: 14, borderWidth: 1, borderColor: theme.border,
+                        backgroundColor: theme.surface, marginBottom: 16,
+                    }}
+                >
+                    <MaterialIcons name="verified-user" size={26} color={theme.primary} />
+                    <View style={{ flex: 1 }}>
+                        <Text style={{ color: theme.text, fontSize: 16, fontWeight: '800' }}>Monetization Center</Text>
+                        <Text style={{ color: theme.textSecondary, fontSize: 12, marginTop: 3 }}>
+                            Check your qualification and verified earning status
+                        </Text>
+                    </View>
+                    <MaterialIcons name="chevron-right" size={24} color={theme.textTertiary} />
+                </TouchableOpacity>
                 {/* Minimalist Balance Section */}
                 {/* Minimalist Balance Section */}
                 <View style={[walletStyles.balanceCardRedesign, { alignItems: 'center', marginTop: 8, paddingVertical: 12 }]}>

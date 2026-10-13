@@ -40,6 +40,7 @@ import { LeaderboardScreen } from './screens/LeaderboardScreen';
 import { XumJudgeScreen } from './screens/XumJudgeScreen';
 import { RecordsScreen } from './screens/RecordsScreen';
 import { WalletScreen } from './screens/WalletScreen';
+import { MonetizationCenterScreen } from './screens/MonetizationCenterScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { SupportScreen } from './screens/SupportScreen';
 import { VoiceTaskScreen } from './screens/tasks/VoiceTaskScreen';
@@ -681,6 +682,8 @@ const AppContent = ({
         return <CompanyDashboardScreen onNavigate={navigate} onLogout={handleLogout} />;
       case ScreenName.HOME:
         return <HomeScreen onNavigate={navigate} balance={balance} onOpenNeuralInput={() => setIsNeuralInputVisible(true)} onOpenContributorHub={() => setIsContributorHubVisible(true)} session={{ user }} />;
+      case ScreenName.MONETIZATION_CENTER:
+        return <MonetizationCenterScreen onNavigate={navigate} onBack={goBack} />;
       case ScreenName.WALLET:
         return <WalletScreen onNavigate={navigate} onBack={goBack} balance={balance} transactions={transactions} onOpenContributorHub={() => setIsContributorHubVisible(true)} onOpenNeuralInput={() => setIsNeuralInputVisible(true)} session={{ user }} accountType={accountType} />;
       case ScreenName.SETTINGS:
