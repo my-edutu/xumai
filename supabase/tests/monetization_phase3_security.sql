@@ -212,13 +212,13 @@ RESET ROLE;
 SET ROLE service_role;
 INSERT INTO xum_monetization.contributor_identity_links
   (clerk_subject,legacy_user_id,link_state,verification_source,verification_reference,verified_at)
-VALUES ('user_worker_missing','33333333-3333-4333-8333-333333333333',
+VALUES ('user_workermissing','33333333-3333-4333-8333-333333333333',
         'verified','trusted_ci_fixture','ci-id-proof-02',now());
 DO $test$
 DECLARE v_link uuid; v_policy uuid; r jsonb;
 BEGIN
   SELECT id INTO v_link FROM xum_monetization.contributor_identity_links
-     WHERE clerk_subject='user_worker_missing';
+     WHERE clerk_subject='user_workermissing';
   SELECT id INTO v_policy FROM xum_monetization.policy_versions
      WHERE policy_key LIKE 'ng-staging-v1-pub-%';
   r := xum_monetization.assess_contributor_v1(v_link,v_policy,'assessment-fail-closed-02');
