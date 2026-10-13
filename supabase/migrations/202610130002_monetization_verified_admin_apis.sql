@@ -363,25 +363,7 @@ BEGIN
     v_claims:=auth.jwt();
     v_subject:=v_claims->>'sub';
     IF v_claims->>'role' IS DISTINCT FROM 'authenticated'
-       OR v_subject IS NULL OR v_subject !~ '^user_[A-Za-z0-9]+
-REVOKE ALL ON FUNCTION xum_monetization.assert_admin_permission(text) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION xum_monetization.latest_verified_signal(uuid,text) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION xum_monetization.assess_contributor_v1(uuid,uuid,text) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION xum_monetization.assess_contributor_v1(uuid,uuid,text) TO service_role;
-GRANT EXECUTE ON FUNCTION xum_monetization.latest_verified_signal(uuid,text) TO service_role;
-
-REVOKE ALL ON FUNCTION public.admin_monetization_policy_overview_v1() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_monetization_policy_overview_v1() TO authenticated;
-REVOKE ALL ON FUNCTION public.admin_propose_monetization_policy_v1(jsonb,text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_propose_monetization_policy_v1(jsonb,text) TO authenticated;
-REVOKE ALL ON FUNCTION public.admin_publish_monetization_policy_v1(uuid,text,timestamptz) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_publish_monetization_policy_v1(uuid,text,timestamptz) TO authenticated;
-
-REVOKE ALL ON FUNCTION public.admin_recent_eligibility_decisions_v1(integer) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_recent_eligibility_decisions_v1(integer) TO authenticated;
-
-COMMIT;
- THEN
+       OR v_subject IS NULL OR v_subject !~ '^user_[A-Za-z0-9]+$' THEN
        RAISE EXCEPTION 'Verified authenticated Clerk session required'
          USING ERRCODE='28000';
     END IF;
