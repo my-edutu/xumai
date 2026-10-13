@@ -55,7 +55,7 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f supabase/tests/monetization_phase4_qualification.sql
       - name: Model an existing legacy withdrawal RPC in test database
         run: |
-          psql -v ON_ERROR_STOP=1 -c 'CREATE FUNCTION public.request_withdrawal_with_otp() RETURNS boolean LANGUAGE sql AS $ SELECT true $;'
+          psql -v ON_ERROR_STOP=1 -c "CREATE FUNCTION public.request_withdrawal_with_otp() RETURNS boolean LANGUAGE sql AS 'SELECT true';"
           psql -v ON_ERROR_STOP=1 -c 'GRANT EXECUTE ON FUNCTION public.request_withdrawal_with_otp() TO anon, authenticated'
       - name: Apply withdrawal freeze twice and verify deny-by-default
         run: |
