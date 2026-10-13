@@ -16,11 +16,11 @@ VALUES
  ('user_otherworker','77777777-7777-4777-8777-777777777777','verified','trusted_ci','identity-proof-two',now());
 -- 12 active questions, all four-letter multiple choice, no actual production question content.
 INSERT INTO xum_monetization.qualification_questions
- (source_reference,prompt,options,correct_choice,active,created_by)
+ (source_reference,prompt,options,correct_choice,active,created_by,reviewed_by,reviewed_at)
 SELECT 'ci-qual-question-'||n,
  'For test item '||n||', which option is correct in this isolated test?',
  '{"A":"Correct CI option","B":"Incorrect","C":"Incorrect","D":"Incorrect"}'::jsonb,
- 'A',true,'trusted_ci'
+ 'A',true,'trusted_ci','independent_ci_reviewer',now()
 FROM generate_series(1,12) n;
 RESET ROLE;
 
