@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseQualificationAttempt, parseQualificationResult } from '../../src/services/qualificationService';
+import { parseQualificationAttempt, parseQualificationResult } from '../../src/services/qualificationModel';
 
 const base = {
   attempt_id: 'test-attempt',
