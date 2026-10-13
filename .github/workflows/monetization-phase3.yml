@@ -1,0 +1,54 @@
+name: Monetization verified-admin API security
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/202610130002_monetization_verified_admin_apis.sql"
+      - "supabase/tests/monetization_phase3_security.sql"
+      - ".github/workflows/monetization-phase3.yml"
+  push:
+    branches:
+      - feat/monetization-verified-decisions-admin-api
+permissions:
+  contents: read
+jobs:
+  isolated-postgres-security:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: xum_isolated
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d xum_isolated"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: test-only-password
+      PGDATABASE: xum_isolated
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify local Postgres client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+          fi
+      - name: Bootstrap isolated Supabase-like roles
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/monetization_test_roles.sql
+      - name: Apply and validate previous foundation
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130001_monetization_phase2_foundation.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/monetization_phase2_security.sql
+      - name: Apply Phase 3 verified-admin API twice
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130002_monetization_verified_admin_apis.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130002_monetization_verified_admin_apis.sql
+      - name: Test admin scopes, approval independence and trusted evidence
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/monetization_phase3_security.sql
