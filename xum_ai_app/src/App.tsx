@@ -40,6 +40,7 @@ import { LeaderboardScreen } from './screens/LeaderboardScreen';
 import { XumJudgeScreen } from './screens/XumJudgeScreen';
 import { RecordsScreen } from './screens/RecordsScreen';
 import { WalletScreen } from './screens/WalletScreen';
+import { MonetizationCenterScreen } from './screens/MonetizationCenterScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { SupportScreen } from './screens/SupportScreen';
 import { VoiceTaskScreen } from './screens/tasks/VoiceTaskScreen';
