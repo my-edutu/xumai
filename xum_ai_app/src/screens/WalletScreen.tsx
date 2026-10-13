@@ -87,9 +87,11 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
     // have passed live identity/ledger verification. Future activation requires
     // a reviewed release, not a client-only feature switch.
     const handleWithdrawal = () => {
-        ReactNative.Alert.alert('Withdrawals paused',
-            'XUM is currently verifying contributor qualifications. Withdrawals are temporarily unavailable.');
-        return;
+        if (withdrawalsLocked()) {
+            ReactNative.Alert.alert('Withdrawals paused',
+                'XUM is currently verifying contributor qualifications. Withdrawals are temporarily unavailable.');
+            return;
+        }
         if (balance <= 0) {
             alert("No balance available to withdraw.");
             return;
@@ -114,8 +116,10 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
     };
 
     const submitWithdrawal = async () => {
-        ReactNative.Alert.alert('Withdrawals paused', 'Withdrawal requests are not available yet.');
-        return;
+        if (withdrawalsLocked()) {
+            ReactNative.Alert.alert('Withdrawals paused', 'Withdrawal requests are not available yet.');
+            return;
+        }
         const amount = parseFloat(withdrawAmount);
 
         if (!withdrawAmount || isNaN(amount) || amount <= 0) {
@@ -192,8 +196,10 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
     };
 
     const verifyOTPAndComplete = async () => {
-        ReactNative.Alert.alert('Withdrawals paused', 'Withdrawal verification is not available yet.');
-        return;
+        if (withdrawalsLocked()) {
+            ReactNative.Alert.alert('Withdrawals paused', 'Withdrawal verification is not available yet.');
+            return;
+        }
         if (!pendingWithdrawalId || !session?.user?.id || !isValidOtp(otpCode)) {
             alert("Please enter a valid 6-digit OTP.");
             return;
@@ -677,3 +683,6 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
         </View>
     );
 };
+
+// Intentional qualification-pilot payout freeze; enabling requires code review.
+function withdrawalsLocked(): boolean { return true; }
