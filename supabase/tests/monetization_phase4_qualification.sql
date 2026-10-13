@@ -78,13 +78,12 @@ END
 $test$;
 RESET ROLE;
 
+CREATE TEMP TABLE ci_activation_request(id uuid);
+GRANT SELECT, INSERT ON ci_activation_request TO authenticated;
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claims','{"role":"authenticated","sub":"user_adminone"}',false);
-DO $test$
-BEGIN
- PERFORM public.admin_request_qualification_activation_v1('qualification-activation-003');
-END
-$test$;
+INSERT INTO pg_temp.ci_activation_request(id)
+SELECT (public.admin_request_qualification_activation_v1('qualification-activation-003')->>'request_id')::uuid;
 RESET ROLE;
 
 SET ROLE authenticated;
@@ -134,6 +133,8 @@ $test$;
 RESET ROLE;
 
 -- Validate typed answers, same-person access, answer-key confidentiality.
+CREATE TEMP TABLE ci_worker_attempt(id uuid);
+GRANT SELECT, INSERT ON ci_worker_attempt TO authenticated;
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claims','{"role":"authenticated","sub":"user_qualworker"}',false);
 DO $test$
@@ -150,6 +151,7 @@ BEGIN
  IF public.start_my_qualification_v1()->>'attempt_id' IS DISTINCT FROM r->>'attempt_id' THEN
    RAISE EXCEPTION 'Reopening current exam created duplicate attempt';
  END IF;
+ INSERT INTO pg_temp.ci_worker_attempt VALUES ((r->>'attempt_id')::uuid);
 END
 $test$;
 RESET ROLE;
