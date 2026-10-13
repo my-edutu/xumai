@@ -6,7 +6,8 @@ BEGIN
      OR has_table_privilege('authenticated','xum_monetization.administrator_grants','SELECT')
      OR has_function_privilege('anon','public.admin_monetization_policy_overview_v1()','EXECUTE')
      OR has_function_privilege('anon','public.admin_propose_monetization_policy_v1(jsonb,text)','EXECUTE')
-     OR has_function_privilege('anon','public.admin_publish_monetization_policy_v1(uuid,text,timestamptz)','EXECUTE') THEN
+     OR has_function_privilege('anon','public.admin_publish_monetization_policy_v1(uuid,text,timestamptz)','EXECUTE')
+     OR has_function_privilege('anon','public.admin_recent_eligibility_decisions_v1(integer)','EXECUTE') THEN
     RAISE EXCEPTION 'Admin private data leaked to untrusted database roles';
   END IF;
   SELECT count(*) INTO v_count FROM xum_monetization.administrator_grants;
@@ -23,7 +24,8 @@ VALUES
  ('user_operator1','policy_draft','ci_trusted_operator','Phase 3 isolated test grant'),
  ('user_operator1','policy_publish','ci_trusted_operator','Tests self-publication prevention'),
  ('user_reviewer2','policy_read','ci_trusted_operator','Phase 3 isolated test grant'),
- ('user_reviewer2','policy_publish','ci_trusted_operator','Two-person policy publication');
+ ('user_reviewer2','policy_publish','ci_trusted_operator','Two-person policy publication'),
+ ('user_reviewer2','eligibility_review','ci_trusted_operator','Review pseudonymous decisions');
 RESET ROLE;
 
 -- Unlisted Clerk accounts must never get admin data or mutation rights.
@@ -198,6 +200,11 @@ BEGIN
     RAISE EXCEPTION 'Contributor was treated as administrator';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
+  BEGIN
+    PERFORM public.admin_recent_eligibility_decisions_v1(10);
+    RAISE EXCEPTION 'Contributor could read others qualification results';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
 END
 $test$;
 RESET ROLE;
@@ -218,6 +225,24 @@ BEGIN
   IF r->>'eligibility'<>'not_monetized' OR
      jsonb_array_length(r->'unmet_requirements')<>14 THEN
     RAISE EXCEPTION 'No evidence incorrectly qualified: %',r;
+  END IF;
+END
+$test$;
+RESET ROLE;
+
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claims','{"role":"authenticated","sub":"user_reviewer2"}',false);
+DO $test$
+DECLARE r jsonb;
+BEGIN
+  r := public.admin_recent_eligibility_decisions_v1(2);
+  IF r->>'can_withdraw' <> 'false'
+     OR r->>'read_only' <> 'true'
+     OR jsonb_array_length(r->'decisions') <> 2 THEN
+    RAISE EXCEPTION 'Admin decision read contract incorrect: %',r;
+  END IF;
+  IF (r->'decisions'->0) ? 'email' OR (r->'decisions'->0) ? 'bank_account' THEN
+    RAISE EXCEPTION 'PII leaked from eligibility review API';
   END IF;
 END
 $test$;
