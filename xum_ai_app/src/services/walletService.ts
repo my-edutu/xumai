@@ -71,7 +71,7 @@ export async function requestWithdrawal(
     details: any
 ): Promise<{ success: boolean; error?: string; id?: string }> {
     // Fail closed even if a consumer bypasses the Wallet screen.
-    return { success: false, error: 'Withdrawals are temporarily paused.' };
+    if (withdrawalsLocked()) return { success: false, error: 'Withdrawals are temporarily paused.' };
     if (!ensureSupabase('Withdraw')) return { success: false, error: 'Supabase not configured' };
     try {
         const { data, error } = await supabase.functions.invoke('request-withdrawal', {
@@ -104,7 +104,7 @@ export async function verifyWithdrawalOtp(
     otp: string
 ): Promise<{ success: boolean; error?: string }> {
     // All withdrawal and OTP verification requests remain locked.
-    return { success: false, error: 'Withdrawals are temporarily paused.' };
+    if (withdrawalsLocked()) return { success: false, error: 'Withdrawals are temporarily paused.' };
     if (!ensureSupabase('WithdrawOTP')) return { success: false, error: 'Supabase not configured' };
     if (!isValidOtp(otp)) return { success: false, error: 'Enter the six-digit verification code.' };
 
@@ -258,3 +258,6 @@ export async function getUserEarningsPeriod(userId: string): Promise<{ today: nu
     }
 }
 
+
+// A release-time policy gate, intentionally non-configurable from client data.
+function withdrawalsLocked(): boolean { return true; }
