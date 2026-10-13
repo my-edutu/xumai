@@ -47,6 +47,7 @@ export const ContributorHubModal = ({ visible, onClose, onNavigate, currentTheme
     const menuItems = [
         { label: 'PROFILE', icon: 'person', color: '#3b82f6', screen: ScreenName.PROFILE },
         { label: 'WALLET', icon: 'account-balance-wallet', color: theme.success, screen: ScreenName.WALLET },
+        { label: 'MONETIZATION', icon: 'verified-user', color: theme.primary, screen: ScreenName.MONETIZATION_CENTER },
         { label: 'REFERRALS', icon: 'group-add', color: '#f59e0b', screen: ScreenName.REFERRALS },
         { label: 'SUBMISSIONS', icon: 'assignment', color: '#10b981', screen: ScreenName.SUBMISSION_TRACKER },
         { label: 'NOTIFICATIONS', icon: 'notifications', color: theme.warning, screen: ScreenName.NOTIFICATIONS },
