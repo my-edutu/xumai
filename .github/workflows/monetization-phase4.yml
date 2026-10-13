@@ -1,0 +1,53 @@
+name: Qualification assessment security
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/202610130003_qualification_assessments.sql"
+      - "supabase/tests/monetization_phase4_qualification.sql"
+      - ".github/workflows/monetization-phase4.yml"
+  push:
+    branches:
+      - feat/qualification-exams-withdrawals-locked
+permissions:
+  contents: read
+jobs:
+  postgres-qualification:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: xum_qualification_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d xum_qualification_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: test-only-password
+      PGDATABASE: xum_qualification_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure psql installed
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+          fi
+      - name: Bootstrap isolated auth and previous migrations
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/monetization_test_roles.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130001_monetization_phase2_foundation.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130002_monetization_verified_admin_apis.sql
+      - name: Apply qualification migration twice
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130003_qualification_assessments.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130003_qualification_assessments.sql
+      - name: Run isolation, scoring, replay and financial lock checks
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/monetization_phase4_qualification.sql
