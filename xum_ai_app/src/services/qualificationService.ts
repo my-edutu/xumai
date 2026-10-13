@@ -2,6 +2,7 @@ import { supabase } from '../supabaseClient';
 import { parseQualificationAttempt, parseQualificationResult } from './qualificationModel';
 import type { QualificationAttempt, QualificationUnavailability, QualificationResult, Choice } from './qualificationModel';
 export * from './qualificationModel';
+const choices: Choice[] = ['A','B','C','D'];
 
 export const QualificationService = {
   async start(): Promise<QualificationAttempt | QualificationUnavailability> {
