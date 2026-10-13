@@ -141,6 +141,7 @@ INSERT INTO xum_monetization.verified_evidence
 SELECT l.id,kv.key,kv.value,'admin_attestation','ci-verified-'||kv.key
 FROM xum_monetization.contributor_identity_links l
 CROSS JOIN LATERAL jsonb_each(jsonb_build_object(
+  'residence_country','NG',
   'account_active',true,
   'verified_age_years',18,
   'age_evidence_verified',true,
@@ -160,7 +161,7 @@ CROSS JOIN LATERAL jsonb_each(jsonb_build_object(
 WHERE l.clerk_subject='user_worker123';
 
 DO $test$
-DECLARE v_link uuid; v_policy uuid; v_result jsonb; v_count integer;
+DECLARE v_link uuid; v_policy uuid; v_result jsonb; v_replay jsonb; v_count integer;
 BEGIN
   SELECT id INTO v_link FROM xum_monetization.contributor_identity_links
     WHERE clerk_subject='user_worker123';
@@ -171,11 +172,11 @@ BEGIN
      jsonb_array_length(v_result->'unmet_requirements') <> 0 THEN
     RAISE EXCEPTION 'Verified record did not qualify: %',v_result;
   END IF;
-  BEGIN
-    PERFORM xum_monetization.assess_contributor_v1(v_link,v_policy,'assessment-approved-ci-01');
-    RAISE EXCEPTION 'Event replay generated a second decision';
-  EXCEPTION WHEN unique_violation THEN NULL;
-  END;
+  v_replay := xum_monetization.assess_contributor_v1(
+    v_link,v_policy,'assessment-approved-ci-01');
+  IF v_replay->>'decision_id' IS DISTINCT FROM v_result->>'decision_id' THEN
+    RAISE EXCEPTION 'Event replay did not return same decision';
+  END IF;
   SELECT count(*) INTO v_count FROM xum_monetization.eligibility_decisions
     WHERE source_event_key='assessment-approved-ci-01';
   IF v_count <> 1 THEN RAISE EXCEPTION 'Idempotent decision missing'; END IF;
@@ -192,7 +193,7 @@ DECLARE result jsonb;
 BEGIN
   result := public.get_my_monetization_status_v1();
   IF result->>'status'<>'eligible' OR result->>'can_withdraw'<>'false'
-     OR jsonb_array_length(result->'checks') <> 14 THEN
+     OR jsonb_array_length(result->'checks') <> 15 THEN
     RAISE EXCEPTION 'Contributor status did not surface verified qualification: %',result;
   END IF;
   BEGIN
@@ -223,7 +224,7 @@ BEGIN
      WHERE policy_key LIKE 'ng-staging-v1-pub-%';
   r := xum_monetization.assess_contributor_v1(v_link,v_policy,'assessment-fail-closed-02');
   IF r->>'eligibility'<>'not_monetized' OR
-     jsonb_array_length(r->'unmet_requirements')<>14 THEN
+     jsonb_array_length(r->'unmet_requirements')<>15 THEN
     RAISE EXCEPTION 'No evidence incorrectly qualified: %',r;
   END IF;
 END
@@ -243,6 +244,46 @@ BEGIN
   END IF;
   IF (r->'decisions'->0) ? 'email' OR (r->'decisions'->0) ? 'bank_account' THEN
     RAISE EXCEPTION 'PII leaked from eligibility review API';
+  END IF;
+END
+$test$;
+RESET ROLE;
+
+-- New trusted integrity evidence invalidates older "eligible" decisions immediately.
+SET ROLE service_role;
+INSERT INTO xum_monetization.verified_evidence
+(identity_link_id,signal,signal_value,provenance,evidence_reference)
+SELECT id,'unresolved_high_risk_fraud_flags','1'::jsonb,
+       'fraud_review','ci-risk-case-new'
+FROM xum_monetization.contributor_identity_links
+WHERE clerk_subject='user_worker123';
+RESET ROLE;
+
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claims','{"role":"authenticated","sub":"user_worker123"}',false);
+DO $test$
+DECLARE r jsonb;
+BEGIN
+  r:=public.get_my_monetization_status_v1();
+  IF r->>'status'<>'not_monetized' OR r->>'reason'<>'ASSESSMENT_PENDING' THEN
+    RAISE EXCEPTION 'New fraud evidence did not invalidate previous decision: %',r;
+  END IF;
+END
+$test$;
+RESET ROLE;
+
+SET ROLE service_role;
+DO $test$
+DECLARE v_link uuid; v_policy uuid; r jsonb;
+BEGIN
+  SELECT id INTO v_link FROM xum_monetization.contributor_identity_links
+    WHERE clerk_subject='user_worker123';
+  SELECT id INTO v_policy FROM xum_monetization.policy_versions
+    WHERE policy_key LIKE 'ng-staging-v1-pub-%';
+  r:=xum_monetization.assess_contributor_v1(v_link,v_policy,'fraud-review-reassessment-03');
+  IF r->>'eligibility'<>'not_monetized'
+     OR NOT (r->'unmet_requirements' ? 'no_unresolved_fraud_flags') THEN
+    RAISE EXCEPTION 'Trusted new fraud flag not applied: %',r;
   END IF;
 END
 $test$;
