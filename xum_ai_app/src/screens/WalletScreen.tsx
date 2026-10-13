@@ -83,7 +83,13 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
     const walletStyles = createWalletStyles(theme);
 
 
+    // Withdrawal operations are intentionally paused until payout controls
+    // have passed live identity/ledger verification. Future activation requires
+    // a reviewed release, not a client-only feature switch.
     const handleWithdrawal = () => {
+        ReactNative.Alert.alert('Withdrawals paused',
+            'XUM is currently verifying contributor qualifications. Withdrawals are temporarily unavailable.');
+        return;
         if (balance <= 0) {
             alert("No balance available to withdraw.");
             return;
@@ -108,6 +114,8 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
     };
 
     const submitWithdrawal = async () => {
+        ReactNative.Alert.alert('Withdrawals paused', 'Withdrawal requests are not available yet.');
+        return;
         const amount = parseFloat(withdrawAmount);
 
         if (!withdrawAmount || isNaN(amount) || amount <= 0) {
@@ -184,6 +192,8 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
     };
 
     const verifyOTPAndComplete = async () => {
+        ReactNative.Alert.alert('Withdrawals paused', 'Withdrawal verification is not available yet.');
+        return;
         if (!pendingWithdrawalId || !session?.user?.id || !isValidOtp(otpCode)) {
             alert("Please enter a valid 6-digit OTP.");
             return;
@@ -286,11 +296,11 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
                                     minWidth: accountType === 'user' ? 200 : undefined,
                                     justifyContent: 'center'
                                 }}
-                                onPress={balance > 0 ? handleWithdrawal : () => alert("No balance available to withdraw.")}
+                                onPress={handleWithdrawal}
                             >
                                 <MaterialIcons name="arrow-outward" size={20} color={balance > 0 ? theme.success : theme.textTertiary} />
                                 <Text style={{ fontSize: 14, fontWeight: '700', color: balance > 0 ? theme.success : theme.textTertiary, textTransform: 'uppercase', letterSpacing: 1 }}>
-                                    Withdraw
+                                    Withdrawals paused
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -331,7 +341,7 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
 
             {/* Withdrawal Modal */}
             <Modal
-                visible={showWithdrawModal}
+                visible={false}
                 transparent
                 animationType="slide"
                 onRequestClose={() => setShowWithdrawModal(false)}
@@ -596,7 +606,7 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({
             </Modal>
             {/* OTP Verification Modal */}
             <Modal
-                visible={showOTPModal}
+                visible={false}
                 transparent
                 animationType="fade"
                 onRequestClose={() => setShowOTPModal(false)}
