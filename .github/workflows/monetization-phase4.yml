@@ -4,6 +4,8 @@ on:
     paths:
       - "supabase/migrations/202610130003_qualification_assessments.sql"
       - "supabase/tests/monetization_phase4_qualification.sql"
+      - "supabase/migrations/202610130004_withdrawal_freeze.sql"
+      - "supabase/tests/monetization_phase4_withdrawal.sql"
       - ".github/workflows/monetization-phase4.yml"
   push:
     branches:
@@ -51,3 +53,12 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130003_qualification_assessments.sql
       - name: Run isolation, scoring, replay and financial lock checks
         run: psql -v ON_ERROR_STOP=1 -f supabase/tests/monetization_phase4_qualification.sql
+      - name: Model an existing legacy withdrawal RPC in test database
+        run: |
+          psql -v ON_ERROR_STOP=1 -c 'CREATE FUNCTION public.request_withdrawal_with_otp() RETURNS boolean LANGUAGE sql AS $ SELECT true $;'
+          psql -v ON_ERROR_STOP=1 -c 'GRANT EXECUTE ON FUNCTION public.request_withdrawal_with_otp() TO anon, authenticated'
+      - name: Apply withdrawal freeze twice and verify deny-by-default
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130004_withdrawal_freeze.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130004_withdrawal_freeze.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/monetization_phase4_withdrawal.sql
