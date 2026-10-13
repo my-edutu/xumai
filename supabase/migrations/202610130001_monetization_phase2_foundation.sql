@@ -39,7 +39,12 @@ CREATE TABLE IF NOT EXISTS xum_monetization.program_controls (
     modified_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CHECK (NOT qualification_enabled OR identity_bridge_enabled),
     CHECK (NOT earnings_enabled OR qualification_enabled),
-    CHECK (NOT withdrawals_enabled OR earnings_enabled)
+    CHECK (NOT withdrawals_enabled OR earnings_enabled),
+    -- Deliberate launch interlock: requires a FUTURE reviewed migration
+    -- to remove after identity, balanced ledger and payout settlement QA.
+    CONSTRAINT xum_financial_features_locked CHECK (
+        earnings_enabled = FALSE AND withdrawals_enabled = FALSE
+    )
 );
 INSERT INTO xum_monetization.program_controls(singleton) VALUES (TRUE)
 ON CONFLICT (singleton) DO NOTHING;
@@ -153,11 +158,10 @@ CREATE TRIGGER xum_evidence_immutable BEFORE UPDATE OR DELETE
 CREATE OR REPLACE FUNCTION xum_monetization.reject_policy_history_change()
 RETURNS TRIGGER LANGUAGE plpgsql SET search_path=pg_catalog AS $$
 BEGIN
-    IF TG_OP = 'DELETE' OR OLD.status = 'published' THEN
-        RAISE EXCEPTION 'Published monetization policy is immutable; version a new policy';
-    END IF;
-    RETURN NEW;
-END $$;
+    -- A published rule set must be a NEW row with a new policy_key and an
+    -- effective timestamp. Editing drafts in place would evade the audit trail.
+    RAISE EXCEPTION 'Monetization policy is append-only; create a new version';
+END $;
 
 DROP TRIGGER IF EXISTS xum_policy_immutable ON xum_monetization.policy_versions;
 CREATE TRIGGER xum_policy_immutable BEFORE UPDATE OR DELETE
