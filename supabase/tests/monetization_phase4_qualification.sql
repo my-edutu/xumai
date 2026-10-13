@@ -7,6 +7,7 @@ VALUES
  ('user_adminone','policy_draft','ci_operator','Isolated admin policy tests'),
  ('user_adminone','policy_publish','ci_operator','Isolated activation first approval'),
  ('user_admintwo','policy_publish','ci_operator','Independent policy publish'),
+ ('user_admintwo','policy_read','ci_operator','Read drafts to independently approve'),
  ('user_admintwo','eligibility_review','ci_operator','Isolated activation second approval');
 INSERT INTO xum_monetization.contributor_identity_links
  (clerk_subject,legacy_user_id,link_state,verification_source,verification_reference,verified_at)
