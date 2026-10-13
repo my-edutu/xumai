@@ -161,7 +161,7 @@ BEGIN
     -- A published rule set must be a NEW row with a new policy_key and an
     -- effective timestamp. Editing drafts in place would evade the audit trail.
     RAISE EXCEPTION 'Monetization policy is append-only; create a new version';
-END $;
+END $$;
 
 DROP TRIGGER IF EXISTS xum_policy_immutable ON xum_monetization.policy_versions;
 CREATE TRIGGER xum_policy_immutable BEFORE UPDATE OR DELETE
