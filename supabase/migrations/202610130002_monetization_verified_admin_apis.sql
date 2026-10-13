@@ -85,20 +85,6 @@ DECLARE v_actor text; v_policy_id uuid; v_key text;
 BEGIN
     v_actor := xum_monetization.assert_admin_permission('policy_draft');
     IF jsonb_typeof(p_proposal) IS DISTINCT FROM 'object'
-       OR p_request_key IS NULL OR length(p_request_key) < 12
-       OR length(p_request_key) > 128
-       OR (SELECT count(*) FROM jsonb_object_keys(p_proposal)) <> 11
-       OR NOT p_proposal ?& ARRAY[
-         'policy_key','country','minimum_age','minimum_profile_percent',
-         'minimum_qualification_tasks','minimum_qualification_accuracy',
-         'minimum_approved_contributions','require_email_verification',
-         'require_phone_verification','require_academy','terms_version'
-       ] THEN
-       -- dataset license is required as a 12th field; checked separately below.
-       -- Conservative: fail closed on incomplete/unknown field sets.
-       NULL;
-    END IF;
-    IF jsonb_typeof(p_proposal) IS DISTINCT FROM 'object'
        OR p_request_key IS NULL OR length(p_request_key) NOT BETWEEN 12 AND 128
        OR (SELECT count(*) FROM jsonb_object_keys(p_proposal)) <> 12
        OR NOT p_proposal ?& ARRAY[
@@ -199,7 +185,8 @@ AS $function$
     SELECT signal_value FROM xum_monetization.verified_evidence
     WHERE identity_link_id=p_identity_link_id AND signal=p_signal
       AND verified_at <= now() AND (expires_at IS NULL OR expires_at > now())
-      AND provenance <> 'self_reported'
+      AND provenance IN ('clerk_verified','academy_verified','qualification_scoring',
+        'quality_review','fraud_review','consent_ledger','admin_attestation')
     ORDER BY verified_at DESC, recorded_at DESC, id DESC
     LIMIT 1
 $function$;
@@ -286,13 +273,19 @@ BEGIN
     jsonb_build_object('requirement','no_unresolved_duplicate_flags','passed',v_duplicates='0'::jsonb,'observed',v_duplicates,'target',0),
     jsonb_build_object('requirement','no_unresolved_fraud_flags','passed',v_fraud='0'::jsonb,'observed',v_fraud,'target',0)
    );
+   -- Make every requirement an explicit JSON boolean, including missing evidence.
+   SELECT jsonb_agg(
+     jsonb_set(value,'{passed}',COALESCE(NULLIF(value->'passed','null'::jsonb),'false'::jsonb))
+     ORDER BY ord
+   ) INTO v_checks
+   FROM jsonb_array_elements(v_checks) WITH ORDINALITY AS row(value,ord);
    -- jsonb booleans may be null when evidence is missing; treat null as false.
    SELECT COALESCE(jsonb_agg(value->>'requirement') FILTER (
      WHERE value->>'passed' IS DISTINCT FROM 'true'), '[]'::jsonb)
    INTO v_unmet FROM jsonb_array_elements(v_checks);
    v_eligible := jsonb_array_length(v_unmet)=0;
    -- Digest includes exact evidence values, policy and assessed checklist.
-   v_digest := encode(digest(p_policy_id::text||':'||p_identity_link_id::text||':'||v_checks::text,'sha256'),'hex');
+   v_digest := encode(pg_catalog.sha256(pg_catalog.convert_to(p_policy_id::text||':'||p_identity_link_id::text||':'||v_checks::text,'UTF8')),'hex');
    INSERT INTO xum_monetization.eligibility_decisions
      (identity_link_id,policy_version_id,eligibility,requirement_results,
       unmet_requirements,evidence_digest,source_event_key)
