@@ -1,0 +1,50 @@
+name: Monetization Phase 2 database safety
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/202610130001_monetization_phase2_foundation.sql"
+      - "supabase/tests/monetization_*.sql"
+      - ".github/workflows/monetization-phase2.yml"
+  push:
+    branches:
+      - feat/monetization-phase2-identity-rules
+permissions:
+  contents: read
+jobs:
+  isolated-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: xum_staging_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d xum_staging_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: test-only-password
+      PGDATABASE: xum_staging_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure PostgreSQL client exists
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+          fi
+      - name: Bootstrap isolated roles and mock verified JWT helper
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/monetization_test_roles.sql
+      - name: Apply migration twice (must be idempotent)
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130001_monetization_phase2_foundation.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610130001_monetization_phase2_foundation.sql
+      - name: Assert permission isolation, disabled money rails and immutable history
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/monetization_phase2_security.sql
